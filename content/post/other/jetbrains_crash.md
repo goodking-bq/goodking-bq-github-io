@@ -6,12 +6,12 @@ categories: ["other"]
 draft: false
 ---
 
-# agent license server
+## agent license server
 
 > [https://fls.jetbrains-agent.com](https://fls.jetbrains-agent.com)
 
 
-# 下载地址： 
+## 下载地址： 
 
 > https://lanzous.com/b0f1c6hzc 
 
