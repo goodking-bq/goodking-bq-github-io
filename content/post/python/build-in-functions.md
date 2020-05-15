@@ -1,6 +1,6 @@
 ---
 title: "python 常用的内置函数"
-date: 2020-05-14T15:43:56+08:00
+date: 2017-05-14T15:43:56+08:00
 draft: false
 tags: ["python","reference"]
 categories: ["python"]

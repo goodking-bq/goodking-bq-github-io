@@ -1,6 +1,6 @@
 ---
 title: "python实现的排序算法"
-date: 2020-05-14T15:47:52+08:00
+date: 2017-05-14T15:47:52+08:00
 draft: false
 tags: ["python","reference"]
 categories: ["python"]
