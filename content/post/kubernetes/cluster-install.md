@@ -145,8 +145,8 @@ sudo systemctl unmask docker.service
 
 ## 安装设置负载均衡 keepalived + haproxy
 
-> keepalived 可以使多台机器组成高可用，提供一个漂移 IP，对外提供服务，它有两种模式： 抢占式、非抢占式 ，这里使用的是抢占式，非抢占请自行google
-> haproxy HAProxy 是一款提供高可用性、负载均衡以及基于TCP（第四层）和HTTP（第七层）应用的代理软件，支持虚拟主机，它是免费、快速并且可靠的一种解决方案
+> - keepalived 可以使多台机器组成高可用，提供一个漂移 IP，对外提供服务，它有两种模式： 抢占式、非抢占式 ，这里使用的是抢占式，非抢占请自行google
+> - haproxy HAProxy 是一款提供高可用性、负载均衡以及基于TCP（第四层）和HTTP（第七层）应用的代理软件，支持虚拟主机，它是免费、快速并且可靠的一种解决方案
 
 - 命令安装，执行
 ```shell
