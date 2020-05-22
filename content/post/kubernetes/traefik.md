@@ -2,6 +2,8 @@
 title: "kubernets 里配置 Traefik"
 date: 2020-05-20T09:22:19+08:00
 draft: false
+tags: ["kubernetes","how-to"]
+categories: ["kubernetes"]
 ---
 
 ![traefik](/kubernetes/traefik-architecture.png)

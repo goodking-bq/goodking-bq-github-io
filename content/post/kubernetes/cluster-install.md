@@ -2,6 +2,8 @@
 title: "kubernetes master集群搭建"
 date: 2020-05-15T10:24:52+08:00
 draft: false
+tags: ["kubernetes","install"]
+categories: ["kubernetes"]
 ---
 ##  开始之前
 
