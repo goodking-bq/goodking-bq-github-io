@@ -14,6 +14,8 @@ pygmentsCodefences = true
 pygmentsUseClasses = true
 pygmentsCodefencesGuessSyntax = true
 
+
+
 hasCJKLanguage = true     # has chinese/japanese/korean ? # 自动检测是否包含 中文\日文\韩文
 paginate = 5                                              # 首页每页显示的文章数
 disqusShortname = ""      # disqus_shortname
@@ -33,26 +35,31 @@ rssLink = "https://goodking-bq.github.io"
   weight = 10
   identifier = "home"
   url = "/"
+  pre = "<i class='fa fa-home' style='color:#16982B'></i>"
 [[menu.main]]
   name = "归档"
   weight = 20
   identifier = "archives"
   url = "/post/"
+  pre = "<i class='fa fa-archive' style='color:#16982B'></i>"
 [[menu.main]]
   name = "标签"
   weight = 30
   identifier = "tags"
   url = "/tags/"
+  pre = "<i class='fa fa-tags' style='color:#16982B'></i>"
 [[menu.main]]
   name = "分类"
   weight = 40
   identifier = "categories"
   url = "/categories/"
+  pre = "<i class='fa fa-sitemap' style='color:#16982B'></i>"
 [[menu.main]]
   name = "关于"
   weight = 50
   identifier = "about"
   url = "/about"
+  pre = "<i class='fa fa-user' style='color:#16982B'></i>"
 
 [params]
   version = "4.x"           # Used to give a friendly message when you have an incompatible update
@@ -146,8 +153,8 @@ rssLink = "https://goodking-bq.github.io"
     repo = ""               # The repo to store comments
 
   [params.gitalk]           # Gitalk is a comment system based on GitHub issues. see https://github.com/gitalk/gitalk
-    owner = "goodking_bq@hotmail.com"              # Your GitHub ID
-    repo = "https://github.com/goodking-bq/goodking-bq.github.io.comment.git"               # The repo to store comments
+    owner = "goodking-bq"              # Your GitHub ID
+    repo = "goodking-bq.github.io"               # The repo to store comments
     clientId = "2a8b1932825256263b83"           # Your client ID
     clientSecret = "911a142ea58b48f7e168576968d15a6e0130204d"       # Your client secret
 
