@@ -209,6 +209,39 @@ metadata:
   name: traefik-ingress-controller
 
 ---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: traefik
+  namespace: default
+data:
+  traefik.yaml: |
+    api:
+      insecure: true
+    log: {}
+    entrypoints:
+      web:
+        address: :80
+      websecure:
+        address: :443
+      websecureudp:
+        address: :443/udp
+    providers:
+      kubernetescrd: true
+    serverstransport:
+      insecureskipverify: true
+    certificatesresolvers:
+      default:
+        acme:
+          httpChallenge:
+            entryPoint: web
+          email: goodking_bq@hotmail.com
+          storage: /mnt/acme.json
+    metrics:
+      prometheus:
+        entryPoint: web
+---
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
@@ -227,25 +260,13 @@ spec:
         app: traefik
     spec:
       serviceAccountName: traefik-ingress-controller
+      hostNetwork: true
       terminationGracePeriodSeconds: 60
+      nodeSelector:             ## 设置node筛选器，在特定label的节点上启动
+        IngressProxy: "true"
       containers:
         - name: traefik
           image: traefik:v2.2
-          args:
-            - --api.insecure
-            - --accesslog
-            - --entrypoints.web.Address=:80
-            - --entrypoints.websecure.Address=:443
-            - --serverstransport.insecureskipverify 
-            - --providers.kubernetescrd
-              #- --certificatesresolvers.default.acme.tlschallenge
-            - --certificatesresolvers.default.acme.httpChallenge.entryPoint=web
-              #- --certificatesresolvers.default.acme.email=goodking_bq@hotmail.com
-              #- --certificatesresolvers.default.acme.storage=acme.json
-            # - --certificatesresolvers.default.acme.dnsChallenge.provider=alidns
-            # Please note that this is the staging Let's Encrypt server.
-            # Once you get things working, you should remove that whole line altogether.
-            #- --certificatesresolvers.default.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
           ports:
             - name: web
               containerPort: 80
@@ -253,42 +274,29 @@ spec:
             - name: websecure
               containerPort: 443
               hostPort: 443
-            - name: admin
-              containerPort: 8080
           securityContext:
             capabilities:
               drop:
                 - ALL
               add:
                 - NET_BIND_SERVICE
-
----
-kind: Deployment
-apiVersion: apps/v1
-metadata:
-  namespace: default
-  name: whoami
-  labels:
-    app: whoami
-
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: whoami
-  template:
-    metadata:
-      labels:
-        app: whoami
-    spec:
-      containers:
-        - name: whoami
-          image: containous/whoami
-          ports:
-            - name: web
-              containerPort: 80
+          volumeMounts:
+            - name: nfs-pvc
+              mountPath: "/mnt"
+            - name: config
+              mountPath: "/etc/traefik"
+      volumes:
+        - name: nfs-pvc
+          persistentVolumeClaim:
+            claimName: traefik
+        - name: config
+          configMap:
+            name: traefik
 ```
 - 说明
+  
+使用了configmap配置traefik
+
 1. 我这里添加了tls支持，就是https(443)的支持,通过 `--entrypoints.websecure.Address=:443` 参数启用
 2. 80 和 443 都用了 **hostPort** ,会在node上起相应的端口，通过端口可以访问服务
 3. **Traefik**支持acme生成 *Let's Encrypt* 证书, 获取证书有三种模式,通过 `--certificatesresolvers.{name}.acme.{type}`配置
@@ -320,7 +328,7 @@ spec:
                     httpChallenge:
                         entryPoint: web
         ```
-    - dnsChallenge
+    - dnsChallenge:
         > - 通过调域名提供商api添加一个域名text，验证。这需要额外的api认证参数
         > - 它支持很多域名商，具体可以看 [providers 列表](https://docs.traefik.io/https/acme/#providers)
         > - 它需要的参数都通过环境变量提供
@@ -332,14 +340,14 @@ spec:
                         provider: alidns
                         delayBeforeCheck: 0
         ```
+4. **acme.json** 保存acme信息，避免重复申请证书，导致申请次数过多而失败
 
-
-4. 取消了**traefik**和后端通信的tls验证，不需要了，因为**traefik**就支持tls, *--serverstransport.insecureskipverify* 参数实现
-5. 这里使用**DaemonSets**部署而不是**Deployments**,每台node和master都有一个
+5. 取消了**traefik**和后端通信的tls验证，不需要了，因为**traefik**就支持tls, **--serverstransport.insecureskipverify** 参数实现
+6. 这里使用**DaemonSets**部署而不是**Deployments**,每台node和master都有一个
     > - Deployments具有更轻松的上下扩展可能性。它可以实现完整的Pod生命周期并支持Kubernetes 1.2的滚动更新。至少需要一个Pod才能运行部署。
     > - DaemonSet会自动缩放到满足特定选择器的所有节点，并保证一次填充一个节点。Kubernetes 1.7还为DaemonSets全面支持滚动更新。
 ## 配置使用
-### traefik 管理端
+### traefik 管理页面
   
 ```yaml 
 # 创建service，配置端口
@@ -376,7 +384,7 @@ spec:
   entryPoints:
     - web
   routes:
-  - match: Host(`traefik.kube.2xi.com`)
+  - match: Host(`traefik.kube.example.com`)
     kind: Rule
     services:
     - name: traefik
@@ -393,7 +401,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-  - match: Host(`traefik.kube.2xi.com`)
+  - match: Host(`traefik.kube.example.com`)
     kind: Rule
     services:
     - name: traefik
@@ -414,7 +422,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-  - match: Host(`dashboard.kube.2xi.com`)
+  - match: Host(`dashboard.kube.example.com`)
     kind: Rule
     services:
     - name: kubernetes-dashboard
@@ -423,6 +431,106 @@ spec:
     certResolver: default
 ```
 
+### mongodb 开放访问
+
+```yaml
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: mongodb
+  namespace: yunwei
+spec:
+  entryPoints:
+    - tcpep
+  routes:
+  - match: HostSNI(`mongo.kube.2xi.com`)
+    services:
+    - name: mongodb
+      port: 27017
+  tls:
+    certResolver: default
+```
+
+> TCP UDP 使用的是**HostSNI**
+> 
+> HostSNI 如果要用域名，那么必须配置tls，我这里配置的是acm。
+> 
+> HostSNI 如果不使用tls，那么用 **\*** 代替域名,这个时候一个端口只能代理一个服务。
+
+### 配置 **BasicAuth** 或是 **DigestAuth** 密码验证
+
+> DigestAuth，和 BasicAuth 中间件是一种限制访问权限的简单方法。
+> 
+> DigestAuth 相比 BasicAuth ,更加安全
+>
+> DigestAuth 只支持realm = traefik
+
+1. 生成密码
+   > **BasicAuth** 和 **DigestAuth** 只是在生成密码的时候有区别，使用的时候都一样
+
+   BasicAuth - 使用 **htpasswd** 命令生成
+
+   DigestAuth - 使用 **htdigest** 命令生成
+   ```shell
+   # ubuntu 需要先安装以上两个命令
+   sudo apt-get install apache2-utils
+   # 生成 BasicAuth
+   ➜  traefik htpasswd -cbB traefik admin admin
+    Adding password for user admin
+   ➜  traefik cat traefik
+    admin:$2y$05$u81X.TPakpiyj1aexy9YZe3s58/.z91nY6D41ob4eYe8sW1uUZxOq
+   # 生成 DigestAuth
+   ➜  htdigest -c traefik traefik admin
+    Adding password for admin in realm traefik.
+    New password:
+    Re-type new password:
+   ➜  traefik cat traefik
+    admin:traefik:234480a045a95d420967533e3e017b22
+   ```
+
+   
+2. 使用 **kubectl** 创建 **secret**
+   ```shell
+   ➜  traefik kubectl create secret generic traefik-user  --from-file=users=traefik
+    secret/traefik-user created
+   kubectl describe secret traefik-user
+   ```
+3. 创建 middleware
+   ```yaml
+   apiVersion: traefik.containo.us/v1alpha1
+   kind: Middleware
+   metadata:
+        name: traefik-digestauth
+   spec:
+        # basicAuth
+        basicAuth:
+            secret: traefik-user
+        # 或是 digestAuth
+        digestAuth:
+            secret: traefik-user
+   ```
+4. 使用 middleware
+   在 router 里添加使用 middleware
+    ```yaml
+    apiVersion: traefik.containo.us/v1alpha1
+    kind: IngressRoute
+    metadata:
+    name: ingressroutetls-traefik
+    namespace: default
+    spec:
+      entryPoints:
+        - websecure
+    routes:
+      - match: Host(`traefik.kube.example.com`)
+        kind: Rule
+        services:
+          - name: traefik
+            port: 8080
+        middlewares:
+          - name: traefik-digestauth
+    tls:
+        certResolver: default
+    ```
 
 ## 最后附上traefik命令帮助
 ```

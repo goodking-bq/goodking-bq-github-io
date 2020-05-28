@@ -34,12 +34,12 @@ kubernetes master 集群有两种模式
 ## 服务器说明
 这里只有三太服务器所有的都装一起了。
 
-| hostname | 内网地址        | 角色      | 系统               | 用户 |
-| -------- | --------------- | --------- | ------------------ | ---- |
-| master1  | 192.168.192.231 | master,hk | ubuntu focal 20.04 | root |
-| master2  | 192.168.238.255 | master,hk | ubuntu focal 20.04 | root |
-| master3  | 192.168.238.167 | master,hk | ubuntu focal 20.04 | root |
-|          | 192.168.255.254 |           | 负载均衡地址       |      |
+| hostname | 内网地址        | 角色           | 系统               | 用户 |
+| -------- | --------------- | -------------- | ------------------ | ---- |
+| master1  | 192.168.192.231 | master,hk,etcd | ubuntu focal 20.04 | root |
+| master2  | 192.168.238.255 | master,hk,etcd | ubuntu focal 20.04 | root |
+| master3  | 192.168.238.167 | master,hk,etcd | ubuntu focal 20.04 | root |
+|          | 192.168.255.254 |                | 负载均衡地址       |      |
 
 说明：
 
