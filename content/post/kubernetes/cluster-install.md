@@ -860,3 +860,7 @@ master3   Ready    master   25m   v1.18.2   192.168.238.167   <none>        Ubun
 ```
 
 **后面就是随意添加node了**
+另外，生成加入命令的命令：
+```shell
+kubeadm token create --print-join-command
+```
