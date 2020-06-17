@@ -117,3 +117,10 @@ users:
 ```
 
 同理 你可以在加 **user** ,**cluster**, **context**,执行 **kubectl config use-context** 或是 **kubectl  get node --kubeconfig=./kubeconfig --context=cluster1-context** 快速在机器之间切换
+
+## 设置默认的命名空间
+
+```shell
+# 设置 **kube-system** 为默认的命名空间
+kubectl config set-context kubernetes-admin@kubernetes --namespace=kube-system
+```

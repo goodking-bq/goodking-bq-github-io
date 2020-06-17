@@ -13,17 +13,11 @@ docker拉取镜像是不需要登陆的，那怎么拉取哪些需要认证的�
 ## 生成 **secret**
 
 ```shell
-cat <<EOF >> sc.yaml
-apiVersion: v1
-data:
-  docker-server: registry.cn-hangzhou.aliyuncs.com 
-  docker-username: you@email.com
-  docker-password: your-password
-kind: Secret
-metadata:
-  name: aliyun
-EOF
-kubectl apply -f sc.yaml
+kubectl create secret docker-registry aliyun-auth --docker-server=registry.cn-hangzhou.aliyuncs.com --docker-username=avc@qq.com --docker-password=121212 
+```
+最后生成的数据类似这样的：
+```json
+{"auths":{"registry.cn-hangzhou.aliyuncs.com":{"username":"avc@qq.com","password":"121212","auth":"MTIwMjI1ODgzQHFxLmNvbTp6MTIwMaaaaaaa"}}}
 ```
 
 > 注意 只有同名称空间才能使用secret
