@@ -1,0 +1,430 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge,chrome=1"><title>python实现的排序算法 - goodking-bq's notes</title><meta name=renderer content="webkit"><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1"><meta http-equiv=cache-control content="no-transform"><meta http-equiv=cache-control content="no-siteapp"><meta name=theme-color content="#f8f5ec"><meta name=msapplication-navbutton-color content="#f8f5ec"><meta name=apple-mobile-web-app-capable content="yes"><meta name=apple-mobile-web-app-status-bar-style content="#f8f5ec"><meta name=author content="goodking-bq"><meta name=description content="总结了一下常见集中排序的算法 归并排序 归并排序也称合并排序，是分治法的典型应用。分治思想是将每个问题分解成个个小问题，将每个小问题解决，然后合"><meta name=keywords content="goodking-bq,notes"><meta name=generator content="Hugo 0.73.0 with theme even"><link rel=canonical href=https://goodking-bq.github.io/post/python/sort/><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=manifest href=/manifest.json><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><script async src=//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js></script><link href=/sass/main.min.827bcb823d5e0c6fac62486a5c6a8cf98d6ddc7eb2ba1139f6e563e3e85a233b.css rel=stylesheet><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin=anonymous><meta property="og:title" content="python实现的排序算法"><meta property="og:description" content="总结了一下常见集中排序的算法 归并排序 归并排序也称合并排序，是分治法的典型应用。分治思想是将每个问题分解成个个小问题，将每个小问题解决，然后合"><meta property="og:type" content="article"><meta property="og:url" content="https://goodking-bq.github.io/post/python/sort/"><meta property="article:published_time" content="2017-05-14T15:47:52+08:00"><meta property="article:modified_time" content="2017-05-14T15:47:52+08:00"><meta itemprop=name content="python实现的排序算法"><meta itemprop=description content="总结了一下常见集中排序的算法 归并排序 归并排序也称合并排序，是分治法的典型应用。分治思想是将每个问题分解成个个小问题，将每个小问题解决，然后合"><meta itemprop=datePublished content="2017-05-14T15:47:52+08:00"><meta itemprop=dateModified content="2017-05-14T15:47:52+08:00"><meta itemprop=wordCount content="2907"><meta itemprop=keywords content="python,reference,"><meta name=twitter:card content="summary"><meta name=twitter:title content="python实现的排序算法"><meta name=twitter:description content="总结了一下常见集中排序的算法 归并排序 归并排序也称合并排序，是分治法的典型应用。分治思想是将每个问题分解成个个小问题，将每个小问题解决，然后合"><!--[if lte IE 9]><script src=https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js></script><![endif]--><!--[if lt IE 9]><script src=https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js></script><script src=https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js></script><![endif]--></head><body><div id=mobile-navbar class=mobile-navbar><div class=mobile-header-logo><a href=/ class=logo>Goodking-Bq</a></div><div class=mobile-navbar-icon><span></span><span></span><span></span></div></div><nav id=mobile-menu class="mobile-menu slideout-menu"><ul class=mobile-menu-list><a href=/><li class=mobile-menu-item>主页</li></a><a href=/post/><li class=mobile-menu-item>归档</li></a><a href=/tags/><li class=mobile-menu-item>标签</li></a><a href=/categories/><li class=mobile-menu-item>分类</li></a><a href=/about><li class=mobile-menu-item>关于</li></a></ul></nav><div class=container id=mobile-panel><header id=header class=header><div class=logo-wrapper><a href=/ class=logo>Goodking-Bq</a></div><nav class=site-navbar><ul id=menu class=menu><li class=menu-item><i class="fa fa-home" style=color:#16982b></i><a class=menu-item-link href=/>主页</a></li><li class=menu-item><i class="fa fa-archive" style=color:#16982b></i><a class=menu-item-link href=/post/>归档</a></li><li class=menu-item><i class="fa fa-tags" style=color:#16982b></i><a class=menu-item-link href=/tags/>标签</a></li><li class=menu-item><i class="fa fa-sitemap" style=color:#16982b></i><a class=menu-item-link href=/categories/>分类</a></li><li class=menu-item><i class="fa fa-user" style=color:#16982b></i><a class=menu-item-link href=/about>关于</a></li></ul></nav><link href=//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css rel=stylesheet></header><main id=main class=main><div class=content-wrapper><div id=content class=content><article class=post><header class=post-header><h1 class=post-title>python实现的排序算法</h1><div class=post-meta><span class=post-time>2017-05-14</span><div class=post-category><a href=/categories/python/>python</a></div><span id=busuanzi_container_page_pv class=more-meta><span id=busuanzi_value_page_pv><img src=/img/spinner.svg alt=spinner.svg></span> times read</span></div></header><div class=post-toc id=post-toc><h2 class=post-toc-title>Contents</h2><div class="post-toc-content always-active"><nav id=TableOfContents><ul><li><a href=#归并排序>归并排序</a></li><li><a href=#插入排序>插入排序</a></li><li><a href=#选择排序>选择排序</a></li><li><a href=#希尔排序>希尔排序</a></li><li><a href=#堆排序--heap-sort->堆排序 ( Heap Sort )</a></li><li><a href=#快速排序>快速排序</a></li></ul></nav></div></div><div class=post-outdated><div class=hint><p>[NOTE] Updated <span class=timeago datetime=2017-05-14T15:47:52 title="May 14, 2017">May 14, 2017</span>. This article may have outdated content or subject matter.</p></div></div><div class=post-content><p>总结了一下常见集中排序的算法</p><p><img src=http://note.youdao.com/yws/public/resource/a6a6965c01311dd71738dc523afd0c80/DCCF3B40BA634FD18145E748BDCDEEA9 alt=image></p><h2 id=归并排序>归并排序</h2><p>归并排序也称合并排序，是分治法的典型应用。分治思想是将每个问题分解成个个小问题，将每个小问题解决，然后合并。</p><p>具体的归并排序就是，将一组无序数按n/2递归分解成只有一个元素的子项，一个元素就是已经排好序的了。然后将这些有序的子元素进行合并。</p><p>合并的过程就是 对 两个已经排好序的子序列，先选取两个子序列中最小的元素进行比较，选取两个元素中最小的那个子序列并将其从子序列中</p><p>去掉添加到最终的结果集中，直到两个子序列归并完成。</p><p>代码如下：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-fallback data-lang=fallback>#!/usr/bin/python  
+importsys  
+  
+def merge(nums,first,middle,last):  
+    &#39;&#39;&#39;&#39;&#39; merge &#39;&#39;&#39;  
+    # 切片边界,左闭右开并且是了0为开始  
+    lnums = nums[first:middle+1]  
+    rnums = nums[middle+1:last+1]  
+    lnums.append(sys.maxint)  
+    rnums.append(sys.maxint)  
+    l = 0  
+    r = 0  
+    foriinrange(first,last+1):  
+        iflnums[l] &lt; rnums[r]:  
+            nums[i] = lnums[l]  
+            l+=1  
+        else:  
+            nums[i] = rnums[r]  
+            r+=1  
+def merge_sort(nums,first,last):  
+    &#39;&#39;&#39;&#39;&#39; merge sort
+    merge_sort函数中传递的是下标，不是元素个数
+    &#39;&#39;&#39;  
+    iffirst &lt; last:  
+        middle = (first + last)/2  
+        merge_sort(nums,first,middle)  
+        merge_sort(nums,middle+1,last)  
+        merge(nums,first,middle,last)  
+  
+if__name__ == &#39;__main__&#39;:  
+    nums = [10,8,4,-1,2,6,7,3]  
+    print&#39;nums is:&#39;,nums  
+    merge_sort(nums,0,7)  
+    print&#39;merge sort:&#39;,nums
+</code></pre></td></tr></table></div></div><p>稳定，时间复杂度 O(nlog n)</p><h2 id=插入排序>插入排序</h2><p>代码如下：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-fallback data-lang=fallback>#!/usr/bin/python  
+import sys  
+  
+def insert_sort(a):  
+    &#39;&#39;&#39;&#39;&#39; 插入排序
+    有一个已经有序的数据序列，要求在这个已经排好的数据序列中插入一个数，
+    但要求插入后此数据序列仍然有序。刚开始 一个元素显然有序，然后插入一
+    个元素到适当位置，然后再插入第三个元素，依次类推
+    &#39;&#39;&#39;  
+    a_len = len(a)  
+    foriinrange(a_len):
+        key = a[i]
+        j = i - 1
+        whilea_len = 0anda[j] &gt; key:  
+            a[j+1] = a[j]  
+            j-=1  
+        a[j+1] = key  
+    returna  
+  
+if__name__ == &#39;__main__&#39;:  
+    nums = [10,8,4,-1,2,6,7,3]  
+    print&#39;nums is:&#39;,nums  
+    insert_sort(nums)  
+    print&#39;insert sort:&#39;,nums
+</code></pre></td></tr></table></div></div><p>稳定，时间复杂度 O(n^2)</p><p>交换两个元素的值python中你可以这么写：a, b = b, a，其实这是因为赋值符号的左右两边都是元组</p><p>（这里需要强调的是，在python中，元组其实是由逗号“,”来界定的，而不是括号）。</p><h2 id=选择排序>选择排序</h2><p>选择排序(Selection sort)是一种简单直观的排序算法。它的工作原理如下。首先在未排序序列中找到最小（大）元素，存放到</p><p>排序序列的起始位置，然后，再从剩余未排序元素中继续寻找最小（大）元素，然后放到已排序序列的末尾。以此类推，直到所</p><p>有元素均排序完毕。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-fallback data-lang=fallback>import sys  
+def select_sort(a):  
+    &#39;&#39;&#39;&#39;&#39; 选择排序  
+    每一趟从待排序的数据元素中选出最小（或最大）的一个元素，
+    顺序放在已排好序的数列的最后，直到全部待排序的数据元素排完。
+    选择排序是不稳定的排序方法。
+    &#39;&#39;&#39;  
+    a_len=len(a)  
+    foriinrange(a_len):#在0-n-1上依次选择相应大小的元素  
+        min_index = i#记录最小元素的下标  
+        forjinrange(i+1,a_len):#查找最小值  
+            if(a[j]&lt;a[min_index]):  
+                min_index=j  
+        ifmin_index != i:#找到最小元素进行交换  
+            a[i],a[min_index] = a[min_index],a[i]  
+  
+if__name__ == &#39;__main__&#39;:  
+    A = [10, -3,5,7,1,3,7]    
+    print&#39;Before sort:&#39;,A    
+    select_sort(A)    
+    print&#39;After sort:&#39;,A
+</code></pre></td></tr></table></div></div><p>不稳定，时间复杂度 O(n^2)</p><h2 id=希尔排序>希尔排序</h2><p>希尔排序，也称递减增量排序算法,希尔排序是非稳定排序算法。该方法又称缩小增量排序，因DL．Shell于1959年提出而得名。</p><p>先取一个小于n的整数d1作为第一个增量，把文件的全部记录分成d1个组。所有距离为d1的倍数的记录放在同一个组中。先在各组内进行排序；</p><p>然后，取第二个增量d2</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-fallback data-lang=fallback>import sys  
+def shell_sort(a):  
+    &#39;&#39;&#39;&#39;&#39; shell排序  
+    &#39;&#39;&#39;  
+    a_len=len(a)  
+    gap=a_len/2#增量  
+    whilegap&gt;0:  
+        foriinrange(a_len):#对同一个组进行选择排序  
+            m=i  
+            j=i+1  
+            whilej&lt;a_len:  
+                ifa[j]&lt;a[m]:  
+                    m=j  
+                j+=gap#j增加gap  
+            ifm!=i:  
+                a[m],a[i]=a[i],a[m]  
+        gap/=2  
+  
+if__name__ == &#39;__main__&#39;:  
+    A = [10, -3,5,7,1,3,7]    
+    print&#39;Before sort:&#39;,A    
+    shell_sort(A)    
+    print&#39;After sort:&#39;,A
+</code></pre></td></tr></table></div></div><p>不稳定，时间复杂度 平均时间 O(nlogn) 最差时间O(n^s)1</p><h2 id=堆排序--heap-sort->堆排序 ( Heap Sort )</h2><p>“堆”的定义：在起始索引为 0 的“堆”中：</p><p>节点 i 的右子节点在位置 2 * i + 24) 节点 i 的父节点在位置 floor( (i – 1) / 2 ) : 注 floor 表示“取整”操作</p><p>堆的特性：</p><p>每个节点的键值一定总是大于（或小于）它的父节点</p><p>“最大堆”：</p><p>“堆”的根节点保存的是键值最大的节点。即“堆”中每个节点的键值都总是大于它的子节点。</p><p>上移，下移 ：</p><p>当某节点的键值大于它的父节点时，这时我们就要进行“上移”操作，即我们把该节点移动到它的父节点的位置，而让它的父节点到它的位置上，然后我们继续判断该节点，直到该节点不再大于它的父节点为止才停止“上移”。</p><p>现在我们再来了解一下“下移”操作。当我们把某节点的键值改小了之后，我们就要对其进行“下移”操作。</p><p>方法：</p><p>我们首先建立一个最大堆(时间复杂度O(n))，然后每次我们只需要把根节点与最后一个位置的节点交换，然后把最后一个位置排除之外，然后把交换后根节点的堆进行调整(时间复杂度 O(lgn) )，即对根节点进行“下移”操作即可。 堆排序的总的时间复杂度为O(nlgn).</p><p>代码如下：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-fallback data-lang=fallback>#!/usr/bin env python  
+# 数组编号从 0开始  
+def left(i):  
+    return2*i +1  
+def right(i):  
+    return2*i+2  
+  
+#保持最大堆性质 使以i为根的子树成为最大堆  
+def max_heapify(A,i,heap_size):  
+    ifheap_size &lt;= 0:  
+        return  
+    l = left(i)  
+    r = right(i)  
+    largest = i# 选出子节点中较大的节点  
+    ifl  A[largest]:  
+        largest = l  
+    ifr  A[largest]:  
+        largest = r  
+    ifi != largest :#说明当前节点不是最大的，下移  
+        A[i],A[largest] = A[largest],A[i]#交换  
+        max_heapify(A,largest,heap_size)#继续追踪下移的点  
+    #print A  
+# 建堆    
+def bulid_max_heap(A):  
+    heap_size = len(A)  
+    ifheap_size &gt;1:  
+        node = heap_size/2 -1  
+        whilenode &gt;= 0:  
+           max_heapify(A,node,heap_size)  
+           node -=1  
+  
+# 堆排序 下标从0开始  
+def heap_sort(A):  
+    bulid_max_heap(A)  
+    heap_size = len(A)  
+    i = heap_size - 1  
+    whilei &gt; 0 :  
+        A[0],A[i] = A[i],A[0]# 堆中的最大值存入数组适当的位置，并且进行交换  
+        heap_size -=1# heap 大小 递减 1  
+        i -= 1# 存放堆中最大值的下标递减 1  
+        max_heapify(A,0,heap_size)  
+  
+if__name__ == &#39;__main__&#39; :
+    A = [10, -3,5,7,1,3,7]  
+    print&#39;Before sort:&#39;,A  
+    heap_sort(A)  
+    print&#39;After sort:&#39;,A
+    
+</code></pre></td></tr></table></div></div><p>不稳定，时间复杂度 O(nlog n)</p><h2 id=快速排序>快速排序</h2><p>快速排序算法和合并排序算法一样，也是基于分治模式。对子数组A[p…r]快速排序的分治过程的三个步骤为：</p><p>分解：把数组A[p…r]分为A[p…q-1]与A[q+1…r]两部分，其中A[p…q-1]中的每个元素都小于等于A[q]而A[q+1…r]中的每个元素都大于等于A[q]；</p><p>解决：通过递归调用快速排序，对子数组A[p…q-1]和A[q+1…r]进行排序；</p><p>合并：因为两个子数组是就地排序的，所以不需要额外的操作。</p><p>对于划分partition 每一轮迭代的开始，x=A[r], 对于任何数组下标k，有：</p><ol><li><p>如果p≤k≤i，则A[k]≤x。</p></li><li><p>如果i+1≤k≤j-1，则A[k]>x。</p></li><li><p>如果k=r，则A[k]=x。</p></li></ol><p>代码如下：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span><span class=lnt>51
+</span><span class=lnt>52
+</span><span class=lnt>53
+</span><span class=lnt>54
+</span><span class=lnt>55
+</span><span class=lnt>56
+</span><span class=lnt>57
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-fallback data-lang=fallback>#!/usr/bin/env python  
+# 快速排序  
+&#39;&#39;&#39;&#39;&#39;
+划分 使满足 以A[r]为基准对数组进行一个划分，比A[r]小的放在左边，
+   比A[r]大的放在右边
+快速排序的分治partition过程有两种方法，
+一种是上面所述的两个指针索引一前一后逐步向后扫描的方法,
+另一种方法是两个指针从首位向中间扫描的方法。
+&#39;&#39;&#39;  
+#p,r 是数组A的下标  
+def partition1(A,p,r):  
+    &#39;&#39;&#39;&#39;&#39;
+      方法一，两个指针索引一前一后逐步向后扫描的方法
+    &#39;&#39;&#39;  
+    x = A[r]  
+    i = p-1  
+    j = p  
+    whilej &lt; r:  
+        ifA[j] &lt; x:  
+            i +=1  
+            A[i],A[j] = A[j],A[i]  
+        j += 1  
+    A[i+1],A[r] = A[r],A[i+1]  
+    returni+1  
+  
+def partition2(A,p,r):  
+    &#39;&#39;&#39;&#39;&#39;
+    两个指针从首尾向中间扫描的方法
+    &#39;&#39;&#39;  
+    i = p  
+    j = r  
+    x = A[p]  
+    whilei = xandi &lt; j:  
+            j -=1  
+        A[i] = A[j]  
+        whileA[i]&lt;=xandi &lt; j:  
+            i +=1  
+        A[j] = A[i]  
+    A[i] = x  
+    returni  
+  
+# quick sort  
+def quick_sort(A,p,r):  
+    &#39;&#39;&#39;&#39;&#39;
+        快速排序的最差时间复杂度为O(n2)，平时时间复杂度为O(nlgn)
+    &#39;&#39;&#39;  
+    ifp &lt; r:  
+        q = partition2(A,p,r)  
+        quick_sort(A,p,q-1)  
+        quick_sort(A,q+1,r)  
+  
+if__name__ == &#39;__main__&#39;:  
+  
+    A = [5,-4,6,3,7,11,1,2]  
+    print&#39;Before sort:&#39;,A  
+    quick_sort(A,0,7)  
+    print&#39;After sort:&#39;,A
+</code></pre></td></tr></table></div></div><p>不稳定，时间复杂度 最理想 O(nlogn)最差时间O(n^2)</p><p>说下python中的序列：</p><p>列表、元组和字符串都是序列，但是序列是什么，它们为什么如此特别呢？序列的两个主要特点是索引操作符和切片操作符。索引操作符让我们可以从序列中抓取一个特定项目。切片操作符让我们能够获取序列的一个切片，即一部分序列,如：a = [‘aa’,’bb’,’cc’], print a[0] 为索引操作，print a[0:2]为切片操作。</p></div><div class=post-copyright><p class=copyright-item><span class=item-title>Author</span>
+<span class=item-content>goodking-bq</span></p><p class=copyright-item><span class=item-title>LastMod</span>
+<span class=item-content>2017-05-14</span></p></div><footer class=post-footer><div class=post-tags><a href=/tags/python/>python</a>
+<a href=/tags/reference/>reference</a></div><nav class=post-nav><a class=prev href=/post/golang/first/><i class="iconfont icon-left"></i><span class="prev-text nav-default">python实现的排序算法</span>
+<span class="prev-text nav-mobile">Prev</span></a>
+<a class=next href=/post/python/callback/><span class="next-text nav-default">回调函数</span>
+<span class="next-text nav-mobile">Next</span>
+<i class="iconfont icon-right"></i></a></nav></footer></article></div><div id=gitalk-container></div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css crossorigin=anonymous><script src=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js crossorigin=anonymous></script><script type=text/javascript>var gitalk=new Gitalk({id:'2017-05-14 15:47:52 \u002b0800 \u002b0800',title:'python实现的排序算法',clientID:'2a8b1932825256263b83',clientSecret:'911a142ea58b48f7e168576968d15a6e0130204d',repo:'goodking-bq.github.io',owner:'goodking-bq',admin:['goodking-bq'],body:decodeURI(location.href)});gitalk.render('gitalk-container');</script><noscript>Please enable JavaScript to view the <a href=https://github.com/gitalk/gitalk>comments powered by gitalk.</a></noscript></div></main><footer id=footer class=footer><div class=social-links><a href=mailto:goodking_bq@hotmail.com class="iconfont icon-email" title=email></a><a href=https://github.com/goodking-bq class="iconfont icon-github" title=github></a><a href=https://goodking-bq.github.io/index.xml type=application/rss+xml class="iconfont icon-rss" title=rss></a></div><div class=copyright><span class=power-by>Powered by <a class=hexo-link href=https://gohugo.io>Hugo</a></span>
+<span class=division>|</span>
+<span class=theme-info>Theme -
+<a class=theme-link href=https://github.com/olOwOlo/hugo-theme-even>Even</a></span><div class=busuanzi-footer><span id=busuanzi_container_site_pv>site pv: <span id=busuanzi_value_site_pv><img src=/img/spinner.svg alt=spinner.svg></span></span>
+<span class=division>|</span>
+<span id=busuanzi_container_site_uv>site uv: <span id=busuanzi_value_site_uv><img src=/img/spinner.svg alt=spinner.svg></span></span></div><span class=copyright-year>&copy;
+2017 -
+2020
+<span class=heart><i class="iconfont icon-heart"></i></span><span class=author>goodking-bq</span></span></div></footer><div class=back-to-top id=back-to-top><i class="iconfont icon-up"></i></div></div><script src=https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/npm/timeago.js@3.0.2/dist/timeago.min.js integrity="sha256-jwCP0NAdCBloaIWTWHmW4i3snUNMHUNO+jr9rYd2iOI=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/npm/timeago.js@3.0.2/dist/timeago.locales.min.js integrity="sha256-ZwofwC1Lf/faQCzN7nZtfijVV6hSwxjQMwXL4gn9qU8=" crossorigin=anonymous></script><script>var languageCode="zh-cn".replace(/-/g,'_').replace(/_(.*)/,function($0,$1){return $0.replace($1,$1.toUpperCase());});timeago().render(document.querySelectorAll('.timeago'),languageCode);timeago.cancel();</script><script>window.sequenceDiagramsOptions={theme:'hand'};</script><script src=https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.js integrity="sha256-4O4pS1SH31ZqrSO2A/2QJTVjTPqVe+jnYgOWUVr7EEc=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/npm/snapsvg@0.5.1/dist/snap.svg-min.js integrity="sha256-oI+elz+sIm+jpn8F/qEspKoKveTc5uKeFHNNVexe6d8=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/npm/underscore@1.8.3/underscore-min.js integrity="sha256-obZACiHd7gkOk9iIL/pimWMTJ4W/pBsKu+oZnSeBIek=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/gh/bramp/js-sequence-diagrams@2.0.1/dist/sequence-diagram-min.js integrity=sha384-8748Vn52gHJYJI0XEuPB2QlPVNUkJlJn9tHqKec6J3q2r9l8fvRxrgn/E5ZHV0sP crossorigin=anonymous></script><link rel=stylesheet href=https://cdn.jsdelivr.net/gh/bramp/js-sequence-diagrams@2.0.1/dist/sequence-diagram-min.css integrity=sha384-6QbLKJMz5dS3adWSeINZe74uSydBGFbnzaAYmp+tKyq60S7H2p6V7g1TysM5lAaF crossorigin=anonymous><script type=text/javascript src=/js/main.min.d7b7ada643c9c1a983026e177f141f7363b4640d619caf01d8831a6718cd44ea.js></script></body></html>

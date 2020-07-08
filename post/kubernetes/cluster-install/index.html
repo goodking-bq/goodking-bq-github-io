@@ -1,0 +1,1304 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge,chrome=1"><title>kubernetes master集群搭建 - goodking-bq's notes</title><meta name=renderer content="webkit"><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1"><meta http-equiv=cache-control content="no-transform"><meta http-equiv=cache-control content="no-siteapp"><meta name=theme-color content="#f8f5ec"><meta name=msapplication-navbutton-color content="#f8f5ec"><meta name=apple-mobile-web-app-capable content="yes"><meta name=apple-mobile-web-app-status-bar-style content="#f8f5ec"><meta name=author content="goodking-bq"><meta name=description content="开始之前 kubernetes master 集群有两种模式 堆叠（Stacked） etcd 拓扑 每个节点都运行 kube-apiserver，kube-scheduler ， kube-c"><meta name=keywords content="goodking-bq,notes"><meta name=generator content="Hugo 0.73.0 with theme even"><link rel=canonical href=https://goodking-bq.github.io/post/kubernetes/cluster-install/><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=manifest href=/manifest.json><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><script async src=//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js></script><link href=/sass/main.min.827bcb823d5e0c6fac62486a5c6a8cf98d6ddc7eb2ba1139f6e563e3e85a233b.css rel=stylesheet><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin=anonymous><meta property="og:title" content="kubernetes master集群搭建"><meta property="og:description" content="开始之前 kubernetes master 集群有两种模式 堆叠（Stacked） etcd 拓扑 每个节点都运行 kube-apiserver，kube-scheduler ， kube-c"><meta property="og:type" content="article"><meta property="og:url" content="https://goodking-bq.github.io/post/kubernetes/cluster-install/"><meta property="article:published_time" content="2020-05-15T10:24:52+08:00"><meta property="article:modified_time" content="2020-05-15T10:24:52+08:00"><meta itemprop=name content="kubernetes master集群搭建"><meta itemprop=description content="开始之前 kubernetes master 集群有两种模式 堆叠（Stacked） etcd 拓扑 每个节点都运行 kube-apiserver，kube-scheduler ， kube-c"><meta itemprop=datePublished content="2020-05-15T10:24:52+08:00"><meta itemprop=dateModified content="2020-05-15T10:24:52+08:00"><meta itemprop=wordCount content="5015"><meta itemprop=keywords content="kubernetes,install,"><meta name=twitter:card content="summary"><meta name=twitter:title content="kubernetes master集群搭建"><meta name=twitter:description content="开始之前 kubernetes master 集群有两种模式 堆叠（Stacked） etcd 拓扑 每个节点都运行 kube-apiserver，kube-scheduler ， kube-c"><!--[if lte IE 9]><script src=https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js></script><![endif]--><!--[if lt IE 9]><script src=https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js></script><script src=https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js></script><![endif]--></head><body><div id=mobile-navbar class=mobile-navbar><div class=mobile-header-logo><a href=/ class=logo>Goodking-Bq</a></div><div class=mobile-navbar-icon><span></span><span></span><span></span></div></div><nav id=mobile-menu class="mobile-menu slideout-menu"><ul class=mobile-menu-list><a href=/><li class=mobile-menu-item>主页</li></a><a href=/post/><li class=mobile-menu-item>归档</li></a><a href=/tags/><li class=mobile-menu-item>标签</li></a><a href=/categories/><li class=mobile-menu-item>分类</li></a><a href=/about><li class=mobile-menu-item>关于</li></a></ul></nav><div class=container id=mobile-panel><header id=header class=header><div class=logo-wrapper><a href=/ class=logo>Goodking-Bq</a></div><nav class=site-navbar><ul id=menu class=menu><li class=menu-item><i class="fa fa-home" style=color:#16982b></i><a class=menu-item-link href=/>主页</a></li><li class=menu-item><i class="fa fa-archive" style=color:#16982b></i><a class=menu-item-link href=/post/>归档</a></li><li class=menu-item><i class="fa fa-tags" style=color:#16982b></i><a class=menu-item-link href=/tags/>标签</a></li><li class=menu-item><i class="fa fa-sitemap" style=color:#16982b></i><a class=menu-item-link href=/categories/>分类</a></li><li class=menu-item><i class="fa fa-user" style=color:#16982b></i><a class=menu-item-link href=/about>关于</a></li></ul></nav><link href=//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css rel=stylesheet></header><main id=main class=main><div class=content-wrapper><div id=content class=content><article class=post><header class=post-header><h1 class=post-title>kubernetes master集群搭建</h1><div class=post-meta><span class=post-time>2020-05-15</span><div class=post-category><a href=/categories/kubernetes/>kubernetes</a></div><span id=busuanzi_container_page_pv class=more-meta><span id=busuanzi_value_page_pv><img src=/img/spinner.svg alt=spinner.svg></span> times read</span></div></header><div class=post-toc id=post-toc><h2 class=post-toc-title>Contents</h2><div class="post-toc-content always-active"><nav id=TableOfContents><ul><li><a href=#开始之前>开始之前</a></li><li><a href=#服务器说明>服务器说明</a></li><li><a href=#准备环境>准备环境</a><ul><li><a href=#设置hostname-以及hosts>设置hostname 以及hosts</a></li><li><a href=#保证每台互相之间ssh无密码互通>保证每台互相之间SSH无密码互通</a></li><li><a href=#在每台服务器上安装docker>在每台服务器上安装docker</a></li><li><a href=#在每台服务器上安装kubernetes>在每台服务器上安装kubernetes</a></li></ul></li><li><a href=#安装设置负载均衡-keepalived--haproxy>安装设置负载均衡 keepalived + haproxy</a></li><li><a href=#单独安装etcd集群可选这是针对单独的etcd集群>单独安装etcd集群(可选，这是针对单独的etcd集群，)</a></li><li><a href=#初始化kubenetes集群>初始化kubenetes集群</a></li><li><a href=#集群安装-calico>集群安装 <strong>Calico</strong></a></li></ul></nav></div></div><div class=post-content><h2 id=开始之前>开始之前</h2><p>kubernetes master 集群有两种模式</p><ul><li><p>堆叠（Stacked） etcd 拓扑
+每个节点都运行 kube-apiserver，kube-scheduler ， kube-controller-manager， etcd实例。</p><p>kube-apiserver 使用负载均衡器暴露给工作节点,每个控制平面节点创建一个本地 etcd 成员（member），这个 etcd 成员只与该节点的 kube-apiserver 通信。这同样适用于本地 kube-controller-manager 和 kube-scheduler 实例。</p><p>这是 kubeadm 中的默认拓扑。当使用 kubeadm init 和 kubeadm join &ndash;control-plane 时，在控制平面节点上会自动创建本地 etcd 成员。
+<img src=/kubernetes/kubeadm-ha-topology-stacked-etcd.svg alt="堆叠（Stacked） etcd 拓扑"></p></li><li><p>外部 etcd 拓扑</p><p>etcd单独的集群，每个etcd与控制节点通过apiserver通信，这种拓扑结构解耦了控制平面和 etcd 成员。因此，它提供了一种 HA 设置，其中失去控制平面实例或者 etcd 成员的影响较小，并且不会像堆叠的 HA 拓扑那样影响集群冗余。</p><p>但是，此拓扑需要两倍于堆叠 HA 拓扑的主机数量。</p><p><img src=/kubernetes/kubeadm-ha-topology-external-etcd.svg alt="外部 etcd 拓扑"></p></li></ul><blockquote><p>无论哪一种，master集群都需要一个外部的负载均衡器，这里我用了haproxy+keepalived做的软负载均衡</p></blockquote><p><strong>我这里做的是第二种，外部tecd拓扑</strong></p><h2 id=服务器说明>服务器说明</h2><p>这里只有三太服务器所有的都装一起了。</p><table><thead><tr><th>hostname</th><th>内网地址</th><th>角色</th><th>系统</th><th>用户</th></tr></thead><tbody><tr><td>master1</td><td>192.168.192.231</td><td>master,hk,etcd</td><td>ubuntu focal 20.04</td><td>root</td></tr><tr><td>master2</td><td>192.168.238.255</td><td>master,hk,etcd</td><td>ubuntu focal 20.04</td><td>root</td></tr><tr><td>master3</td><td>192.168.238.167</td><td>master,hk,etcd</td><td>ubuntu focal 20.04</td><td>root</td></tr><tr><td></td><td>192.168.255.254</td><td></td><td>负载均衡地址</td><td></td></tr></tbody></table><p>说明：</p><ul><li>hk: haproxy+keepalived</li><li>master: kubernetes control plane , apiserver+ controller-manster+scheduler</li><li>etcd: etcd cluster node</li></ul><h2 id=准备环境>准备环境</h2><h3 id=设置hostname-以及hosts>设置hostname 以及hosts</h3><p>按上面的配置更改每台的 <strong>hostname</strong> 以及 <strong>/etc/hosts</strong></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-sh data-lang=sh>hostnamectl set-hostname master2
+cat <span class=s>&lt;&lt;EOF &gt;&gt; /etc/hosts
+</span><span class=s>192.168.192.231 master1
+</span><span class=s>192.168.238.167 master3
+</span><span class=s>192.168.238.255 master2
+</span><span class=s>EOF</span>
+</code></pre></td></tr></table></div></div><h3 id=保证每台互相之间ssh无密码互通>保证每台互相之间SSH无密码互通</h3><p>master1上执行</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-sh data-lang=sh>ssh-keygen -t rsa -P <span class=s2>&#34;&#34;</span>
+<span class=nb>cd</span> .ssh
+scp id_rsa*  master2:.ssh
+scp id_rsa*  master3:.ssh
+</code></pre></td></tr></table></div></div><p>将.ssh/id_rsa.pub .ssh/id_rsa复制到其他两台相同的目录执行相同，每台执行</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-sh data-lang=sh>cat .ssh/id_rsa.pub&gt;&gt;.ssh/authorized_keys
+</code></pre></td></tr></table></div></div><h3 id=在每台服务器上安装docker>在每台服务器上安装docker</h3><ul><li>添加源，focal 太新了还没得源，所以用了 xenial 源</li></ul><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-sh data-lang=sh>cat <span class=s>&lt;&lt;EOF &gt; /etc/apt/sources.list.d/docker.list
+</span><span class=s>deb [arch=amd64] https://mirrors.aliyun.com/docker-ce/linux/ubuntu Bionic stable
+</span><span class=s>EOF</span>
+</code></pre></td></tr></table></div></div><ul><li>安装</li></ul><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-sh data-lang=sh>sudo apt update <span class=o>&amp;&amp;</span> sudo apt install containerd docker.io
+</code></pre></td></tr></table></div></div><ul><li>设置自动启动</li></ul><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-sh data-lang=sh>sudo systemctl <span class=nb>enable</span> docker
+sudo systemctl start docker
+</code></pre></td></tr></table></div></div><p>如果提示 <code>Failed to enable unit: Unit file /etc/systemd/system/docker.service is masked.</code></p><p>执行</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-shell data-lang=shell>sudo systemctl unmask docker.socket
+sudo systemctl unmask docker.service
+</code></pre></td></tr></table></div></div><h3 id=在每台服务器上安装kubernetes>在每台服务器上安装kubernetes</h3><ul><li><p>添加源，focal 太新了还没得源，所以用了 xenial 源</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-sh data-lang=sh>cat <span class=s>&lt;&lt;EOF &gt; /etc/apt/sources.list.d/kubernetes.list
+</span><span class=s>deb http://mirrors.aliyun.com/kubernetes/apt kubernetes-xenial main
+</span><span class=s>EOF</span>
+sudo apt update
+</code></pre></td></tr></table></div></div><p>如果update提示</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-fallback data-lang=fallback>W: GPG error: http://mirrors.aliyun.com/kubernetes/apt kubernetes-xenial InRelease: The following signatures couldn&#39;t be verified because the public key is not available: NO_PUBKEY 6A030B21BA07F4FB
+E: The repository &#39;http://mirrors.aliyun.com/kubernetes/apt kubernetes-xenial InRelease&#39; is not signed.
+N: Updating from such a repository can&#39;t be done securely, and is therefore disabled by default.
+N: See apt-secure(8) manpage for repository creation and user configuration details.
+</code></pre></td></tr></table></div></div><p>只需要添加pubkey就可以了 我这里是 <strong>NO_PUBKEY 6A030B21BA07F4FB</strong>，最后8位 <strong>BA07F4FB</strong>
+执行下面命令：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-shell data-lang=shell>gpg --keyserver keyserver.ubuntu.com --recv-keys BA07F4FB
+gpg --export --armor BA07F4FB <span class=p>|</span> sudo apt-key add -
+sudo apt-get update
+</code></pre></td></tr></table></div></div></li><li><p>安装kube</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-sh data-lang=sh>sudo apt-get install -y kubelet kubeadm kubectl
+sudo apt-mark hold kubelet kubeadm kubectl
+</code></pre></td></tr></table></div></div></li><li><p>关闭swap</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-sh data-lang=sh>sudo swapoff -a
+</code></pre></td></tr></table></div></div><p>要永久生效只需要把 <strong>/etc/fstab</strong>中的swap列注释掉</p></li></ul><h2 id=安装设置负载均衡-keepalived--haproxy>安装设置负载均衡 keepalived + haproxy</h2><blockquote><ul><li>keepalived 可以使多台机器组成高可用，提供一个漂移 IP，对外提供服务，它有两种模式： 抢占式、非抢占式 ，这里使用的是抢占式，非抢占请自行google</li><li>haproxy HAProxy 是一款提供高可用性、负载均衡以及基于TCP（第四层）和HTTP（第七层）应用的代理软件，支持虚拟主机，它是免费、快速并且可靠的一种解决方案</li></ul></blockquote><ul><li>命令安装，执行</li></ul><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-shell data-lang=shell>sudo apt install keepalived haproxy
+</code></pre></td></tr></table></div></div><ul><li>设置keepalived
+找一个内网没被使用的ip： 192.168.255.254</li></ul><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-sh data-lang=sh>cat <span class=s>&lt;&lt; EOF &gt; /etc/keepalived/keepalived.conf
+</span><span class=s>! Configuration File for keepalived
+</span><span class=s>
+</span><span class=s>global_defs {
+</span><span class=s>   router_id LVS_DEVEL_MASTER2 # 名字，每台不一样
+</span><span class=s>}
+</span><span class=s>
+</span><span class=s>vrrp_script check_haproxy {
+</span><span class=s>    script &#34;killall -0 haproxy&#34;
+</span><span class=s>    interval 3
+</span><span class=s>    weight -2
+</span><span class=s>    fall 10
+</span><span class=s>    rise 2
+</span><span class=s>}
+</span><span class=s>
+</span><span class=s>vrrp_instance VI_1 {
+</span><span class=s>    state MASTER # 这里有两种 MASTER|BACKUP,MASTER挂了会自动切换到BACKUP 
+</span><span class=s>    interface eno2 # 绑定的网卡，不要学错了。
+</span><span class=s>    virtual_router_id 51 # 虚拟路由id，集群里必须一样
+</span><span class=s>    priority 150 # 切换权重
+</span><span class=s>    advert_int 1
+</span><span class=s>    authentication {
+</span><span class=s>        auth_type PASS
+</span><span class=s>        auth_pass 35f18af7190d51c9f7f78f37300a0cbd
+</span><span class=s>    }
+</span><span class=s>    virtual_ipaddress {
+</span><span class=s>        192.168.255.254  # 重要，设置负载均衡的ip
+</span><span class=s>    }
+</span><span class=s>    track_script {
+</span><span class=s>        check_haproxy # 检查脚本
+</span><span class=s>    }
+</span><span class=s>}
+</span><span class=s>EOF</span> 
+systemctl restart keepalived.service
+</code></pre></td></tr></table></div></div><blockquote><p>检查MASTER节点的网卡上是不是多了个ip ： 192.168.255.254</p></blockquote><ul><li>设置haproxy</li></ul><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span><span class=lnt>51
+</span><span class=lnt>52
+</span><span class=lnt>53
+</span><span class=lnt>54
+</span><span class=lnt>55
+</span><span class=lnt>56
+</span><span class=lnt>57
+</span><span class=lnt>58
+</span><span class=lnt>59
+</span><span class=lnt>60
+</span><span class=lnt>61
+</span><span class=lnt>62
+</span><span class=lnt>63
+</span><span class=lnt>64
+</span><span class=lnt>65
+</span><span class=lnt>66
+</span><span class=lnt>67
+</span><span class=lnt>68
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-shell data-lang=shell>cat <span class=s>&lt;&lt; EOF &gt; /etc/keepalived/keepalived.conf
+</span><span class=s>
+</span><span class=s># 全局配置
+</span><span class=s>global
+</span><span class=s>	log /dev/log	local0
+</span><span class=s>	log /dev/log	local1 notice
+</span><span class=s>	chroot /var/lib/haproxy
+</span><span class=s>	stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
+</span><span class=s>	stats timeout 30s
+</span><span class=s>	user haproxy
+</span><span class=s>	group haproxy
+</span><span class=s>	daemon
+</span><span class=s>
+</span><span class=s>	# Default SSL material locations
+</span><span class=s>	ca-base /etc/ssl/certs
+</span><span class=s>	crt-base /etc/ssl/private
+</span><span class=s>
+</span><span class=s>	# See: https://ssl-config.mozilla.org/#server=haproxy&amp;server-version=2.0.3&amp;config=intermediate
+</span><span class=s>        ssl-default-bind-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
+</span><span class=s>        ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
+</span><span class=s>        ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
+</span><span class=s>
+</span><span class=s>defaults
+</span><span class=s>	log	global
+</span><span class=s>	mode	http
+</span><span class=s>	option	httplog
+</span><span class=s>	option	dontlognull
+</span><span class=s>        timeout connect 5000
+</span><span class=s>        timeout client  50000
+</span><span class=s>        timeout server  50000
+</span><span class=s>	errorfile 400 /etc/haproxy/errors/400.http
+</span><span class=s>	errorfile 403 /etc/haproxy/errors/403.http
+</span><span class=s>	errorfile 408 /etc/haproxy/errors/408.http
+</span><span class=s>	errorfile 500 /etc/haproxy/errors/500.http
+</span><span class=s>	errorfile 502 /etc/haproxy/errors/502.http
+</span><span class=s>	errorfile 503 /etc/haproxy/errors/503.http
+</span><span class=s>	errorfile 504 /etc/haproxy/errors/504.http
+</span><span class=s>
+</span><span class=s>#---------------------------------------------------------------------
+</span><span class=s>#  frontend for api
+</span><span class=s>#---------------------------------------------------------------------
+</span><span class=s>frontend kubernetes-apiserver
+</span><span class=s>    mode                 tcp
+</span><span class=s>    bind                 *:16443
+</span><span class=s>    option               tcplog
+</span><span class=s>    default_backend      kubernetes-apiserver
+</span><span class=s>
+</span><span class=s>#---------------------------------------------------------------------
+</span><span class=s># backend for api
+</span><span class=s>#---------------------------------------------------------------------
+</span><span class=s>backend kubernetes-apiserver
+</span><span class=s>    mode        tcp
+</span><span class=s>    balance     roundrobin
+</span><span class=s>    server  master-0 master1:6443 check
+</span><span class=s>    server  master-1 master2:6443 check
+</span><span class=s>    server  master-2 master3:6443 check
+</span><span class=s>
+</span><span class=s>#---------------------------------------------------------------------
+</span><span class=s># 状态监控
+</span><span class=s>#---------------------------------------------------------------------
+</span><span class=s>listen stats
+</span><span class=s>    bind                 *:1080
+</span><span class=s>    stats auth           admin:awesomePassword
+</span><span class=s>    stats refresh        5s
+</span><span class=s>    stats realm          HAProxy\ Statistics
+</span><span class=s>    stats uri            /admin?stats
+</span><span class=s>EOF</span> 
+sudo systemctl restart haproxy
+</code></pre></td></tr></table></div></div><h2 id=单独安装etcd集群可选这是针对单独的etcd集群>单独安装etcd集群(可选，这是针对单独的etcd集群，)</h2><p>参考官方文档 <a href=https://kubernetes.io/zh/docs/setup/production-environment/tools/kubeadm/setup-ha-etcd-with-kubeadm/>使用 kubeadm 创建一个高可用 etcd 集群</a></p><ul><li>在每台上执行</li></ul><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-sh data-lang=sh>sudo apt install etcd -y
+</code></pre></td></tr></table></div></div><ul><li>将 kubelet 配置为 etcd 的服务管理器。 在每台上执行</li></ul><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-sh data-lang=sh>cat <span class=s>&lt;&lt; EOF &gt; /etc/systemd/system/kubelet.service.d/20-etcd-service-manager.conf
+</span><span class=s>[Service]
+</span><span class=s>ExecStart=
+</span><span class=s>#  Replace &#34;systemd&#34; with the cgroup driver of your container runtime. The default value in the kubelet is &#34;cgroupfs&#34;.
+</span><span class=s>ExecStart=/usr/bin/kubelet --address=127.0.0.1 --pod-manifest-path=/etc/kubernetes/manifests --cgroup-driver=systemd
+</span><span class=s>Restart=always
+</span><span class=s>EOF</span>
+
+systemctl daemon-reload
+systemctl restart kubelet
+</code></pre></td></tr></table></div></div><ul><li>为 kubeadm 创建配置文件。</li></ul><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-sh data-lang=sh>
+<span class=c1># 使用 IP 或可解析的主机名替换 HOST0、HOST1 和 HOST2</span>
+<span class=nb>export</span> <span class=nv>HOST0</span><span class=o>=</span>master1
+<span class=nb>export</span> <span class=nv>HOST1</span><span class=o>=</span>master2
+<span class=nb>export</span> <span class=nv>HOST2</span><span class=o>=</span>master3
+<span class=c1># 使用了hosts</span>
+<span class=c1># 创建临时目录来存储将被分发到其它主机上的文件</span>
+mkdir -p /tmp/<span class=si>${</span><span class=nv>HOST0</span><span class=si>}</span>/ /tmp/<span class=si>${</span><span class=nv>HOST1</span><span class=si>}</span>/ /tmp/<span class=si>${</span><span class=nv>HOST2</span><span class=si>}</span>/
+
+<span class=nv>ETCDHOSTS</span><span class=o>=(</span><span class=si>${</span><span class=nv>HOST0</span><span class=si>}</span> <span class=si>${</span><span class=nv>HOST1</span><span class=si>}</span> <span class=si>${</span><span class=nv>HOST2</span><span class=si>}</span><span class=o>)</span>
+<span class=nv>NAMES</span><span class=o>=(</span><span class=s2>&#34;infra0&#34;</span> <span class=s2>&#34;infra1&#34;</span> <span class=s2>&#34;infra2&#34;</span><span class=o>)</span>
+
+<span class=k>for</span> i in <span class=s2>&#34;</span><span class=si>${</span><span class=p>!ETCDHOSTS[@]</span><span class=si>}</span><span class=s2>&#34;</span><span class=p>;</span> <span class=k>do</span>
+<span class=nv>HOST</span><span class=o>=</span><span class=si>${</span><span class=nv>ETCDHOSTS</span><span class=p>[</span><span class=nv>$i</span><span class=p>]</span><span class=si>}</span>
+<span class=nv>NAME</span><span class=o>=</span><span class=si>${</span><span class=nv>NAMES</span><span class=p>[</span><span class=nv>$i</span><span class=p>]</span><span class=si>}</span>
+cat <span class=s>&lt;&lt; EOF &gt; /tmp/${HOST}/kubeadmcfg.yaml
+</span><span class=s>apiVersion: &#34;kubeadm.k8s.io/v1beta2&#34;
+</span><span class=s>kind: ClusterConfiguration
+</span><span class=s>etcd:
+</span><span class=s>    local:
+</span><span class=s>        serverCertSANs:
+</span><span class=s>        - &#34;${HOST}&#34;
+</span><span class=s>        peerCertSANs:
+</span><span class=s>        - &#34;${HOST}&#34;
+</span><span class=s>        extraArgs:
+</span><span class=s>            initial-cluster: infra0=https://${ETCDHOSTS[0]}:2380,infra1=https://${ETCDHOSTS[1]}:2380,infra2=https://${ETCDHOSTS[2]}:2380
+</span><span class=s>            initial-cluster-state: new
+</span><span class=s>            name: ${NAME}
+</span><span class=s>            listen-peer-urls: https://${HOST}:2380
+</span><span class=s>            listen-client-urls: https://${HOST}:2379
+</span><span class=s>            advertise-client-urls: https://${HOST}:2379
+</span><span class=s>            initial-advertise-peer-urls: https://${HOST}:2380
+</span><span class=s>EOF</span>
+<span class=k>done</span>
+</code></pre></td></tr></table></div></div><ul><li>生成证书颁发机构</li></ul><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-sh data-lang=sh>kubeadm init phase certs etcd-ca
+</code></pre></td></tr></table></div></div><ul><li>为每个成员创建证书</li></ul><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-sh data-lang=sh>kubeadm init phase certs etcd-server --config<span class=o>=</span>/tmp/<span class=si>${</span><span class=nv>HOST2</span><span class=si>}</span>/kubeadmcfg.yaml
+kubeadm init phase certs etcd-peer --config<span class=o>=</span>/tmp/<span class=si>${</span><span class=nv>HOST2</span><span class=si>}</span>/kubeadmcfg.yaml
+kubeadm init phase certs etcd-healthcheck-client --config<span class=o>=</span>/tmp/<span class=si>${</span><span class=nv>HOST2</span><span class=si>}</span>/kubeadmcfg.yaml
+kubeadm init phase certs apiserver-etcd-client --config<span class=o>=</span>/tmp/<span class=si>${</span><span class=nv>HOST2</span><span class=si>}</span>/kubeadmcfg.yaml
+cp -R /etc/kubernetes/pki /tmp/<span class=si>${</span><span class=nv>HOST2</span><span class=si>}</span>/
+<span class=c1># 清理不可重复使用的证书</span>
+find /etc/kubernetes/pki -not -name ca.crt -not -name ca.key -type f -delete
+
+kubeadm init phase certs etcd-server --config<span class=o>=</span>/tmp/<span class=si>${</span><span class=nv>HOST1</span><span class=si>}</span>/kubeadmcfg.yaml
+kubeadm init phase certs etcd-peer --config<span class=o>=</span>/tmp/<span class=si>${</span><span class=nv>HOST1</span><span class=si>}</span>/kubeadmcfg.yaml
+kubeadm init phase certs etcd-healthcheck-client --config<span class=o>=</span>/tmp/<span class=si>${</span><span class=nv>HOST1</span><span class=si>}</span>/kubeadmcfg.yaml
+kubeadm init phase certs apiserver-etcd-client --config<span class=o>=</span>/tmp/<span class=si>${</span><span class=nv>HOST1</span><span class=si>}</span>/kubeadmcfg.yaml
+cp -R /etc/kubernetes/pki /tmp/<span class=si>${</span><span class=nv>HOST1</span><span class=si>}</span>/
+find /etc/kubernetes/pki -not -name ca.crt -not -name ca.key -type f -delete
+
+kubeadm init phase certs etcd-server --config<span class=o>=</span>/tmp/<span class=si>${</span><span class=nv>HOST0</span><span class=si>}</span>/kubeadmcfg.yaml
+kubeadm init phase certs etcd-peer --config<span class=o>=</span>/tmp/<span class=si>${</span><span class=nv>HOST0</span><span class=si>}</span>/kubeadmcfg.yaml
+kubeadm init phase certs etcd-healthcheck-client --config<span class=o>=</span>/tmp/<span class=si>${</span><span class=nv>HOST0</span><span class=si>}</span>/kubeadmcfg.yaml
+kubeadm init phase certs apiserver-etcd-client --config<span class=o>=</span>/tmp/<span class=si>${</span><span class=nv>HOST0</span><span class=si>}</span>/kubeadmcfg.yaml
+<span class=c1># 不需要移动 certs 因为它们是给 HOST0 使用的</span>
+
+<span class=c1># 清理不应从此主机复制的证书</span>
+find /tmp/<span class=si>${</span><span class=nv>HOST2</span><span class=si>}</span> -name ca.key -type f -delete
+find /tmp/<span class=si>${</span><span class=nv>HOST1</span><span class=si>}</span> -name ca.key -type f -delete
+</code></pre></td></tr></table></div></div><ul><li>复制证书到其他两台上</li></ul><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-sh data-lang=sh>scp -r /tmp/master2/* master2:
+scp -r /tmp/master3/* master3:
+ssh master2 <span class=s2>&#34;mv pki /etc/kubernetes/&#34;</span>
+ssh master3 <span class=s2>&#34;mv pki /etc/kubernetes/&#34;</span>
+</code></pre></td></tr></table></div></div><p>检查下文件
+master1:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-fallback data-lang=fallback>/tmp/${HOST0}
+└── kubeadmcfg.yaml
+---
+/etc/kubernetes/pki
+├── apiserver-etcd-client.crt
+├── apiserver-etcd-client.key
+└── etcd
+    ├── ca.crt
+    ├── ca.key
+    ├── healthcheck-client.crt
+    ├── healthcheck-client.key
+    ├── peer.crt
+    ├── peer.key
+    ├── server.crt
+    └── server.key
+</code></pre></td></tr></table></div></div><p>master2,master3:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-fallback data-lang=fallback>$HOME
+└── kubeadmcfg.yaml
+---
+/etc/kubernetes/pki
+├── apiserver-etcd-client.crt
+├── apiserver-etcd-client.key
+└── etcd
+    ├── ca.crt
+    ├── healthcheck-client.crt
+    ├── healthcheck-client.key
+    ├── peer.crt
+    ├── peer.key
+    ├── server.crt
+    └── server.key
+</code></pre></td></tr></table></div></div><ul><li>创建pod
+在mater1执行</li></ul><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-fallback data-lang=fallback>kubeadm init phase etcd local --config=/tmp/master1/kubeadmcfg.yaml
+ssh master2 &#34;kubeadm init phase etcd local --config=/home/ubuntu/kubeadmcfg.yaml&#34;
+ssh master3 &#34;kubeadm init phase etcd local --config=/home/ubuntu/kubeadmcfg.yaml&#34;
+</code></pre></td></tr></table></div></div><p>上面的命令是在 <strong>/etc/kubernetes# cd manifests/</strong> 下面创建etcd.yaml,当kubelet启动时，会创建docker etcd,我这里想让etcd不在docker跑，
+所有我把它移走了。</p><p>参照上面的<strong>etcd.yaml</strong>文件更改etcd配置文件 <strong>/etc/default/etcd</strong></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>  1
+</span><span class=lnt>  2
+</span><span class=lnt>  3
+</span><span class=lnt>  4
+</span><span class=lnt>  5
+</span><span class=lnt>  6
+</span><span class=lnt>  7
+</span><span class=lnt>  8
+</span><span class=lnt>  9
+</span><span class=lnt> 10
+</span><span class=lnt> 11
+</span><span class=lnt> 12
+</span><span class=lnt> 13
+</span><span class=lnt> 14
+</span><span class=lnt> 15
+</span><span class=lnt> 16
+</span><span class=lnt> 17
+</span><span class=lnt> 18
+</span><span class=lnt> 19
+</span><span class=lnt> 20
+</span><span class=lnt> 21
+</span><span class=lnt> 22
+</span><span class=lnt> 23
+</span><span class=lnt> 24
+</span><span class=lnt> 25
+</span><span class=lnt> 26
+</span><span class=lnt> 27
+</span><span class=lnt> 28
+</span><span class=lnt> 29
+</span><span class=lnt> 30
+</span><span class=lnt> 31
+</span><span class=lnt> 32
+</span><span class=lnt> 33
+</span><span class=lnt> 34
+</span><span class=lnt> 35
+</span><span class=lnt> 36
+</span><span class=lnt> 37
+</span><span class=lnt> 38
+</span><span class=lnt> 39
+</span><span class=lnt> 40
+</span><span class=lnt> 41
+</span><span class=lnt> 42
+</span><span class=lnt> 43
+</span><span class=lnt> 44
+</span><span class=lnt> 45
+</span><span class=lnt> 46
+</span><span class=lnt> 47
+</span><span class=lnt> 48
+</span><span class=lnt> 49
+</span><span class=lnt> 50
+</span><span class=lnt> 51
+</span><span class=lnt> 52
+</span><span class=lnt> 53
+</span><span class=lnt> 54
+</span><span class=lnt> 55
+</span><span class=lnt> 56
+</span><span class=lnt> 57
+</span><span class=lnt> 58
+</span><span class=lnt> 59
+</span><span class=lnt> 60
+</span><span class=lnt> 61
+</span><span class=lnt> 62
+</span><span class=lnt> 63
+</span><span class=lnt> 64
+</span><span class=lnt> 65
+</span><span class=lnt> 66
+</span><span class=lnt> 67
+</span><span class=lnt> 68
+</span><span class=lnt> 69
+</span><span class=lnt> 70
+</span><span class=lnt> 71
+</span><span class=lnt> 72
+</span><span class=lnt> 73
+</span><span class=lnt> 74
+</span><span class=lnt> 75
+</span><span class=lnt> 76
+</span><span class=lnt> 77
+</span><span class=lnt> 78
+</span><span class=lnt> 79
+</span><span class=lnt> 80
+</span><span class=lnt> 81
+</span><span class=lnt> 82
+</span><span class=lnt> 83
+</span><span class=lnt> 84
+</span><span class=lnt> 85
+</span><span class=lnt> 86
+</span><span class=lnt> 87
+</span><span class=lnt> 88
+</span><span class=lnt> 89
+</span><span class=lnt> 90
+</span><span class=lnt> 91
+</span><span class=lnt> 92
+</span><span class=lnt> 93
+</span><span class=lnt> 94
+</span><span class=lnt> 95
+</span><span class=lnt> 96
+</span><span class=lnt> 97
+</span><span class=lnt> 98
+</span><span class=lnt> 99
+</span><span class=lnt>100
+</span><span class=lnt>101
+</span><span class=lnt>102
+</span><span class=lnt>103
+</span><span class=lnt>104
+</span><span class=lnt>105
+</span><span class=lnt>106
+</span><span class=lnt>107
+</span><span class=lnt>108
+</span><span class=lnt>109
+</span><span class=lnt>110
+</span><span class=lnt>111
+</span><span class=lnt>112
+</span><span class=lnt>113
+</span><span class=lnt>114
+</span><span class=lnt>115
+</span><span class=lnt>116
+</span><span class=lnt>117
+</span><span class=lnt>118
+</span><span class=lnt>119
+</span><span class=lnt>120
+</span><span class=lnt>121
+</span><span class=lnt>122
+</span><span class=lnt>123
+</span><span class=lnt>124
+</span><span class=lnt>125
+</span><span class=lnt>126
+</span><span class=lnt>127
+</span><span class=lnt>128
+</span><span class=lnt>129
+</span><span class=lnt>130
+</span><span class=lnt>131
+</span><span class=lnt>132
+</span><span class=lnt>133
+</span><span class=lnt>134
+</span><span class=lnt>135
+</span><span class=lnt>136
+</span><span class=lnt>137
+</span><span class=lnt>138
+</span><span class=lnt>139
+</span><span class=lnt>140
+</span><span class=lnt>141
+</span><span class=lnt>142
+</span><span class=lnt>143
+</span><span class=lnt>144
+</span><span class=lnt>145
+</span><span class=lnt>146
+</span><span class=lnt>147
+</span><span class=lnt>148
+</span><span class=lnt>149
+</span><span class=lnt>150
+</span><span class=lnt>151
+</span><span class=lnt>152
+</span><span class=lnt>153
+</span><span class=lnt>154
+</span><span class=lnt>155
+</span><span class=lnt>156
+</span><span class=lnt>157
+</span><span class=lnt>158
+</span><span class=lnt>159
+</span><span class=lnt>160
+</span><span class=lnt>161
+</span><span class=lnt>162
+</span><span class=lnt>163
+</span><span class=lnt>164
+</span><span class=lnt>165
+</span><span class=lnt>166
+</span><span class=lnt>167
+</span><span class=lnt>168
+</span><span class=lnt>169
+</span><span class=lnt>170
+</span><span class=lnt>171
+</span><span class=lnt>172
+</span><span class=lnt>173
+</span><span class=lnt>174
+</span><span class=lnt>175
+</span><span class=lnt>176
+</span><span class=lnt>177
+</span><span class=lnt>178
+</span><span class=lnt>179
+</span><span class=lnt>180
+</span><span class=lnt>181
+</span><span class=lnt>182
+</span><span class=lnt>183
+</span><span class=lnt>184
+</span><span class=lnt>185
+</span><span class=lnt>186
+</span><span class=lnt>187
+</span><span class=lnt>188
+</span><span class=lnt>189
+</span><span class=lnt>190
+</span><span class=lnt>191
+</span><span class=lnt>192
+</span><span class=lnt>193
+</span><span class=lnt>194
+</span><span class=lnt>195
+</span><span class=lnt>196
+</span><span class=lnt>197
+</span><span class=lnt>198
+</span><span class=lnt>199
+</span><span class=lnt>200
+</span><span class=lnt>201
+</span><span class=lnt>202
+</span><span class=lnt>203
+</span><span class=lnt>204
+</span><span class=lnt>205
+</span><span class=lnt>206
+</span><span class=lnt>207
+</span><span class=lnt>208
+</span><span class=lnt>209
+</span><span class=lnt>210
+</span><span class=lnt>211
+</span><span class=lnt>212
+</span><span class=lnt>213
+</span><span class=lnt>214
+</span><span class=lnt>215
+</span><span class=lnt>216
+</span><span class=lnt>217
+</span><span class=lnt>218
+</span><span class=lnt>219
+</span><span class=lnt>220
+</span><span class=lnt>221
+</span><span class=lnt>222
+</span><span class=lnt>223
+</span><span class=lnt>224
+</span><span class=lnt>225
+</span><span class=lnt>226
+</span><span class=lnt>227
+</span><span class=lnt>228
+</span><span class=lnt>229
+</span><span class=lnt>230
+</span><span class=lnt>231
+</span><span class=lnt>232
+</span><span class=lnt>233
+</span><span class=lnt>234
+</span><span class=lnt>235
+</span><span class=lnt>236
+</span><span class=lnt>237
+</span><span class=lnt>238
+</span><span class=lnt>239
+</span><span class=lnt>240
+</span><span class=lnt>241
+</span><span class=lnt>242
+</span><span class=lnt>243
+</span><span class=lnt>244
+</span><span class=lnt>245
+</span><span class=lnt>246
+</span><span class=lnt>247
+</span><span class=lnt>248
+</span><span class=lnt>249
+</span><span class=lnt>250
+</span><span class=lnt>251
+</span><span class=lnt>252
+</span><span class=lnt>253
+</span><span class=lnt>254
+</span><span class=lnt>255
+</span><span class=lnt>256
+</span><span class=lnt>257
+</span><span class=lnt>258
+</span><span class=lnt>259
+</span><span class=lnt>260
+</span><span class=lnt>261
+</span><span class=lnt>262
+</span><span class=lnt>263
+</span><span class=lnt>264
+</span><span class=lnt>265
+</span><span class=lnt>266
+</span><span class=lnt>267
+</span><span class=lnt>268
+</span><span class=lnt>269
+</span><span class=lnt>270
+</span><span class=lnt>271
+</span><span class=lnt>272
+</span><span class=lnt>273
+</span><span class=lnt>274
+</span><span class=lnt>275
+</span><span class=lnt>276
+</span><span class=lnt>277
+</span><span class=lnt>278
+</span><span class=lnt>279
+</span><span class=lnt>280
+</span><span class=lnt>281
+</span><span class=lnt>282
+</span><span class=lnt>283
+</span><span class=lnt>284
+</span><span class=lnt>285
+</span><span class=lnt>286
+</span><span class=lnt>287
+</span><span class=lnt>288
+</span><span class=lnt>289
+</span><span class=lnt>290
+</span><span class=lnt>291
+</span><span class=lnt>292
+</span><span class=lnt>293
+</span><span class=lnt>294
+</span><span class=lnt>295
+</span><span class=lnt>296
+</span><span class=lnt>297
+</span><span class=lnt>298
+</span><span class=lnt>299
+</span><span class=lnt>300
+</span><span class=lnt>301
+</span><span class=lnt>302
+</span><span class=lnt>303
+</span><span class=lnt>304
+</span><span class=lnt>305
+</span><span class=lnt>306
+</span><span class=lnt>307
+</span><span class=lnt>308
+</span><span class=lnt>309
+</span><span class=lnt>310
+</span><span class=lnt>311
+</span><span class=lnt>312
+</span><span class=lnt>313
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-fallback data-lang=fallback>## etcd(1) daemon options
+## See &#34;/usr/share/doc/etcd-server/op-guide/configuration.md.gz&#34;
+
+### Member flags
+
+##### --name
+## Human-readable name for this member.
+## This value is referenced as this node&#39;s own entries listed in the
+## `--initial-cluster` flag (e.g., `default=http://localhost:2380`). This
+## needs to match the key used in the flag if using static bootstrapping. When
+## using discovery, each member must have a unique name. `Hostname` or
+## `machine-id` can be a good choice.
+## default: &#34;default&#34;
+ETCD_NAME=&#34;etcd-master1&#34;
+
+##### --data-dir
+## Path to the data directory.
+## default: &#34;${name}.etcd&#34;
+#ETCD_DATA_DIR=&#34;/var/lib/etcd/master&#34;
+
+##### --wal-dir
+## Path to the dedicated wal directory. If this flag is set, etcd will write
+## the WAL files to the walDir rather than the dataDir. This allows a
+## dedicated disk to be used, and helps avoid io competition between logging
+## and other IO operations.
+## default: &#34;&#34;
+# ETCD_WAL_DIR
+
+##### --snapshot-count
+## Number of committed transactions to trigger a snapshot to disk.
+## default: &#34;100000&#34;
+# ETCD_SNAPSHOT_COUNT=&#34;100000&#34;
+
+##### --heartbeat-interval
+## Time (in milliseconds) of a heartbeat interval.
+## default: &#34;100&#34;
+# ETCD_HEARTBEAT_INTERVAL=&#34;100&#34;
+
+##### --election-timeout
+## Time (in milliseconds) for an election to timeout. See
+## /usr/share/doc/etcd-server/tuning.md.gz for details.
+## default: &#34;1000&#34;
+# ETCD_ELECTION_TIMEOUT=&#34;1000&#34;
+
+##### --listen-peer-urls
+## List of URLs to listen on for peer traffic. This flag tells the etcd to
+## accept incoming requests from its peers on the specified scheme://IP:port
+## combinations. Scheme can be either http or https.If 0.0.0.0 is specified as
+## the IP, etcd listens to the given port on all interfaces. If an IP address is
+## given as well as a port, etcd will listen on the given port and interface.
+## Multiple URLs may be used to specify a number of addresses and ports to listen
+## on. The etcd will respond to requests from any of the listed addresses and
+## ports.
+## default: &#34;http://localhost:2380&#34;
+## example: &#34;http://10.0.0.1:2380&#34;
+## invalid example: &#34;http://example.com:2380&#34; (domain name is invalid for binding)
+# ETCD_LISTEN_PEER_URLS=&#34;http://localhost:2380&#34;
+ETCD_LISTEN_PEER_URLS=&#34;https://192.168.192.231:2380&#34;
+
+##### --listen-client-urls
+## List of URLs to listen on for client traffic. This flag tells the etcd to
+## accept incoming requests from the clients on the specified scheme://IP:port
+## combinations. Scheme can be either http or https. If 0.0.0.0 is specified as
+## the IP, etcd listens to the given port on all interfaces. If an IP address is
+## given as well as a port, etcd will listen on the given port and interface.
+## Multiple URLs may be used to specify a number of addresses and ports to listen
+## on. The etcd will respond to requests from any of the listed addresses and
+## ports.
+## default: &#34;http://localhost:2379&#34;
+## example: &#34;http://10.0.0.1:2379&#34;
+## invalid example: &#34;http://example.com:2379&#34; (domain name is invalid for binding)
+# ETCD_LISTEN_CLIENT_URLS=&#34;http://localhost:2379&#34;
+ETCD_LISTEN_CLIENT_URLS=&#34;https://192.168.192.231:2379&#34;
+
+##### --max-snapshots
+## Maximum number of snapshot files to retain (0 is unlimited)
+## The default for users on Windows is unlimited, and manual purging down to 5
+## (or some preference for safety) is recommended.
+## default: 5
+# ETCD_MAX_SNAPSHOTS=&#34;5&#34;
+
+##### --max-wals
+## Maximum number of wal files to retain (0 is unlimited)
+## The default for users on Windows is unlimited, and manual purging down to 5
+## (or some preference for safety) is recommended.
+## default: 5
+# ETCD_MAX_WALS=&#34;5&#34;
+
+##### --cors
+## Comma-separated white list of origins for CORS (cross-origin resource
+## sharing).
+## default: none
+# ETCD_CORS
+
+### Clustering flags
+
+# `--initial` prefix flags are used in bootstrapping (static bootstrap,
+# discovery-service bootstrap or runtime reconfiguration) a new member, and
+# ignored when restarting an existing member.
+
+# `--discovery` prefix flags need to be set when using discovery service.
+
+##### --initial-advertise-peer-urls
+
+## List of this member&#39;s peer URLs to advertise to the rest of the cluster.
+## These addresses are used for communicating etcd data around the cluster. At
+## least one must be routable to all cluster members. These URLs can contain
+## domain names.
+## default: &#34;http://localhost:2380&#34;
+## example: &#34;http://example.com:2380, http://10.0.0.1:2380&#34;
+ETCD_INITIAL_ADVERTISE_PEER_URLS=&#34;https://master1:2380&#34;
+
+##### --initial-cluster
+## Initial cluster configuration for bootstrapping.
+## The key is the value of the `--name` flag for each node provided. The
+## default uses `default` for the key because this is the default for the
+## `--name` flag.
+## default: &#34;default=http://localhost:2380&#34;
+ETCD_INITIAL_CLUSTER=&#34;etcd-master1=https://master1:2380,etcd-master2=https://master2:2380,etcd-master3=https://master3:2380&#34;
+
+##### --initial-cluster-state
+## Initial cluster state (&#34;new&#34; or &#34;existing&#34;). Set to `new` for all members
+## present during initial static or DNS bootstrapping. If this option is set to
+## `existing`, etcd will attempt to join the existing cluster. If the wrong value
+## is set, etcd will attempt to start but fail safely.
+## default: &#34;new&#34;
+ETCD_INITIAL_CLUSTER_STATE=&#34;new&#34;
+
+##### --initial-cluster-token
+## Initial cluster token for the etcd cluster during bootstrap.
+## default: &#34;etcd-cluster&#34;
+# ETCD_INITIAL_CLUSTER_TOKEN=&#34;etcd-cluster&#34;
+
+##### --advertise-client-urls
+## List of this member&#39;s client URLs to advertise to the rest of the cluster.
+## These URLs can contain domain names.
+## Be careful if advertising URLs such as http://localhost:2379 from a cluster
+## member and are using the proxy feature of etcd. This will cause loops, because
+## the proxy will be forwarding requests to itself until its resources (memory,
+## file descriptors) are eventually depleted.
+## default: &#34;http://localhost:2379&#34;
+## example: &#34;http://example.com:2379, http://10.0.0.1:2379&#34;
+ETCD_ADVERTISE_CLIENT_URLS=&#34;https://master1:2379&#34;
+
+##### --discovery
+## Discovery URL used to bootstrap the cluster.
+## default: none
+# ETCD_DISCOVERY
+
+##### --discovery-srv
+## DNS srv domain used to bootstrap the cluster.
+## default: none
+# ETCD_DISCOVERY_SRV
+
+##### --discovery-fallback
+## Expected behavior (&#34;exit&#34; or &#34;proxy&#34;) when discovery services fails. &#34;proxy&#34;
+## supports v2 API only.
+## default: &#34;proxy&#34;
+# ETCD_DISCOVERY_FALLBACK=&#34;proxy&#34;
+
+##### --discovery-proxy
+## HTTP proxy to use for traffic to discovery service.
+## default: none
+# ETCD_DISCOVERY_PROXY
+
+##### --strict-reconfig-check
+## Reject reconfiguration requests that would cause quorum loss.
+## default: false
+# ETCD_STRICT_RECONFIG_CHECK
+
+##### --auto-compaction-retention
+## Auto compaction retention for mvcc key value store in hour. 0 means disable
+## auto compaction.
+## default: 0
+# ETCD_AUTO_COMPACTION_RETENTION=&#34;0&#34;
+
+
+##### --enable-v2
+## Accept etcd V2 client requests
+## default: true
+# ETCD_ENABLE_V2=&#34;true&#34;
+
+### Proxy flags
+
+# `--proxy` prefix flags configures etcd to run in proxy mode. &#34;proxy&#34; supports
+# v2 API only.
+
+##### --proxy
+## Proxy mode setting (&#34;off&#34;, &#34;readonly&#34; or &#34;on&#34;).
+## default: &#34;off&#34;
+# ETCD_PROXY=&#34;off&#34;
+
+##### --proxy-failure-wait
+## Time (in milliseconds) an endpoint will be held in a failed state before
+## being reconsidered for proxied requests.
+## default: 5000
+# ETCD_PROXY_FAILURE_WAIT=&#34;5000&#34;
+
+##### --proxy-refresh-interval
+## Time (in milliseconds) of the endpoints refresh interval.
+## default: 30000
+# ETCD_PROXY_REFRESH_INTERVAL=&#34;30000&#34;
+
+##### --proxy-dial-timeout
+## Time (in milliseconds) for a dial to timeout or 0 to disable the timeout
+## default: 1000
+# ETCD_PROXY_DIAL_TIMEOUT=&#34;1000&#34;
+
+##### --proxy-write-timeout
+## Time (in milliseconds) for a write to timeout or 0 to disable the timeout.
+## default: 5000
+# ETCD_PROXY_WRITE_TIMEOUT=&#34;5000&#34;
+
+##### --proxy-read-timeout
+## Time (in milliseconds) for a read to timeout or 0 to disable the timeout.
+## Don&#39;t change this value if using watches because use long polling requests.
+## default: 0
+# ETCD_PROXY_READ_TIMEOUT=&#34;0&#34;
+
+### Security flags
+
+# The security flags help to build a secure etcd cluster.
+
+##### --ca-file (**DEPRECATED**)
+## Path to the client server TLS CA file. `--ca-file ca.crt` could be replaced
+## by `--trusted-ca-file ca.crt --client-cert-auth` and etcd will perform the
+## same.
+## default: none
+# ETCD_CA_FILE
+
+##### --cert-file
+## Path to the client server TLS cert file.
+## default: none
+ETCD_CERT_FILE=&#34;/etc/kubernetes/pki/etcd/server.crt&#34;
+
+##### --key-file
+## Path to the client server TLS key file.
+## default: none
+ETCD_KEY_FILE=&#34;/etc/kubernetes/pki/etcd/server.key&#34;
+
+##### --client-cert-auth
+## Enable client cert authentication.
+## default: false
+ETCD_CLIENT_CERT_AUTH=true
+
+##### --trusted-ca-file
+## Path to the client server TLS trusted CA key file.
+## default: none
+ETCD_TRUSTED_CA_FILE=&#34;/etc/kubernetes/pki/etcd/ca.crt&#34;
+
+##### --auto-tls
+## Client TLS using generated certificates
+## default: false
+ETCD_AUTO_TLS=true
+
+##### --peer-ca-file (**DEPRECATED**)
+## Path to the peer server TLS CA file. `--peer-ca-file ca.crt` could be
+## replaced by `--peer-trusted-ca-file ca.crt --peer-client-cert-auth` and etcd
+## will perform the same.
+## default: none
+ETCD_PEER_CA_FILE=&#34;/etc/kubernetes/pki/etcd/ca.crt&#34;
+
+##### --peer-cert-file
+## Path to the peer server TLS cert file.
+## default: none
+ETCD_PEER_CERT_FILE=&#34;/etc/kubernetes/pki/etcd/peer.crt&#34;
+
+##### --peer-key-file
+## Path to the peer server TLS key file.
+## default: none
+ETCD_PEER_KEY_FILE=&#34;/etc/kubernetes/pki/etcd/peer.key&#34;
+
+##### --peer-client-cert-auth
+## Enable peer client cert authentication.
+## default: false
+ETCD_PEER_CLIENT_CERT_AUTH=true
+
+##### --peer-trusted-ca-file
+## Path to the peer server TLS trusted CA file.
+## default: none
+ETCD_PEER_TRUSTED_CA_FILE=&#34;/etc/kubernetes/pki/etcd/ca.crt&#34;
+
+##### --peer-auto-tls
+## Peer TLS using generated certificates
+## default: false
+# ETCD_PEER_AUTO_TLS
+
+### Logging flags
+
+##### --debug
+## Drop the default log level to DEBUG for all subpackages.
+## default: false (INFO for all packages)
+# ETCD_DEBUG
+
+##### --log-package-levels
+## Set individual etcd subpackages to specific log levels. An example being
+## `etcdserver=WARNING,security=DEBUG`
+## default: none (INFO for all packages)
+# ETCD_LOG_PACKAGE_LEVELS
+
+
+### Unsafe flags
+
+# Please be CAUTIOUS when using unsafe flags because it will break the guarantees given by the consensus protocol.
+# For example, it may panic if other members in the cluster are still alive.
+# Follow the instructions when using these flags.
+
+##### --force-new-cluster
+## Force to create a new one-member cluster. It commits configuration changes
+## forcing to remove all existing members in the cluster and add itself. It needs
+## to be set to restore a backup.
+## default: false
+# ETCD_FORCE_NEW_CLUSTER
+</code></pre></td></tr></table></div></div><p>三台都改后重启etcd，etcd2:</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-shell data-lang=shell><span class=c1># etcd 需要权限</span>
+sudo chmod <span class=m>777</span> -R /etc/kubernetes/pik/etcd
+sudo systemctl restart  etcd
+<span class=c1># 查看状态</span>
+root@master1:~# etcdctl --endpoint<span class=o>=</span>https://master2:2379 --cert-file<span class=o>=</span>/etc/kubernetes/pki/etcd/server.crt  --key-file<span class=o>=</span>/etc/kubernetes/pki/etcd/server.key --ca-file<span class=o>=</span>/etc/kubernetes/pki/etcd/ca.crt cluster-health
+member 5f23d73292959784 is healthy: got healthy result from https://master3:2379
+member 9d8e4977362dd913 is healthy: got healthy result from https://master2:2379
+member 9db5890b6392f376 is healthy: got healthy result from https://master1:2379
+</code></pre></td></tr></table></div></div><p>好了 etcd搭建好了。</p><h2 id=初始化kubenetes集群>初始化kubenetes集群</h2><p>创建 初始化的配置文件</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-shell data-lang=shell>cat <span class=s>&lt;&lt; EOF &gt; init.yaml
+</span><span class=s>apiVersion: kubeadm.k8s.io/v1beta2
+</span><span class=s>kind: ClusterConfiguration
+</span><span class=s>kubernetesVersion: stable
+</span><span class=s>controlPlaneEndpoint: &#34;192.168.255.254:16443&#34;
+</span><span class=s>etcd:
+</span><span class=s>    external:
+</span><span class=s>        endpoints:
+</span><span class=s>        - https://192.168.192.231:3379
+</span><span class=s>        - https://192.168.238.255:3379
+</span><span class=s>        - https://192.168.238.167:3379
+</span><span class=s>        caFile: /etc/kubernetes/pki/etcd/ca.crt
+</span><span class=s>        certFile: /etc/kubernetes/pki/apiserver-etcd-client.crt
+</span><span class=s>        keyFile: /etc/kubernetes/pki/apiserver-etcd-client.key
+</span><span class=s>networking:
+</span><span class=s>  dnsDomain: cluster.local
+</span><span class=s>  serviceSubnet: 10.96.0.0/16
+</span><span class=s>  podSubnet: 10.100.0.1/16
+</span><span class=s>imageRepository: registry.cn-hangzhou.aliyuncs.com/google_containers
+</span><span class=s>EOF</span>
+</code></pre></td></tr></table></div></div><blockquote><ul><li>上面配置设置使用了阿里云的镜像，因为 <em>k8s.gcr.io</em> 被墙了</li><li>配置设置了 serviceSubnet podSubnet 安装网络插件这必须要设置的。</li></ul></blockquote><p>执行命令：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-shell data-lang=shell>kubeadm init --config init.conf --upload-certs
+</code></pre></td></tr></table></div></div><p>当看到类似下面输出，说明你成功了。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-fallback data-lang=fallback>You can now join any number of the control-plane node running the following command on each as root:
+
+  kubeadm join 192.168.255.254:16443 --token 74neap.19ou4fcojxvw4dow \
+    --discovery-token-ca-cert-hash sha256:20f5a97e506b2a77e98622646490a6a6638e2ae4792bbe51bfd7c2c7ceb3196c \
+    --control-plane --certificate-key cce07ad77f7dd5df1a70a190acc91cc8153bad24eeb52aa9140aa3fee2c38b13
+
+Please note that the certificate-key gives access to cluster sensitive data, keep it secret!
+As a safeguard, uploaded-certs will be deleted in two hours; If necessary, you can use
+&#34;kubeadm init phase upload-certs --upload-certs&#34; to reload certs afterward.
+
+Then you can join any number of worker nodes by running the following on each as root:
+
+kubeadm join 192.168.255.254:16443 --token 74neap.19ou4fcojxvw4dow \
+    --discovery-token-ca-cert-hash sha256:20f5a97e506b2a77e98622646490a6a6638e2ae4792bbe51bfd7c2c7ceb3196c
+</code></pre></td></tr></table></div></div><p>然后在其他两台都执行：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-shell data-lang=shell>kubeadm join 192.168.255.254:16443 --token 74neap.19ou4fcojxvw4dow <span class=se>\
+</span><span class=se></span>    --discovery-token-ca-cert-hash sha256:20f5a97e506b2a77e98622646490a6a6638e2ae4792bbe51bfd7c2c7ceb3196c <span class=se>\
+</span><span class=se></span>    --control-plane --certificate-key cce07ad77f7dd5df1a70a190acc91cc8153bad24eeb52aa9140aa3fee2c38b13
+
+mkdir ~/.kube
+cp /etc/kubernetes/admin.conf  ~/.kube/config
+</code></pre></td></tr></table></div></div><p>成功后在任意一台上可以看到下面的结果</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-fallback data-lang=fallback>root@master2:~# kubectl get node
+NAME      STATUS     ROLES    AGE   VERSION
+master1   NotReady   master   44s   v1.18.2
+master2   NotReady   master   79s   v1.18.2
+master3   NotReady   master   37s   v1.18.2
+</code></pre></td></tr></table></div></div><blockquote><p>status 是notready, 因为没有装网络插件</p></blockquote><h2 id=集群安装-calico>集群安装 <strong>Calico</strong></h2><p>在master上执行</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-fallback data-lang=fallback>kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+</code></pre></td></tr></table></div></div><p>等待确定所有的pod都是running状态</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-sh data-lang=sh>root@master1:~# kubectl get pods --all-namespaces
+NAMESPACE     NAME                                       READY   STATUS    RESTARTS   AGE
+kube-system   calico-kube-controllers-789f6df884-vpnjt   1/1     Running   <span class=m>0</span>          22m
+kube-system   calico-node-hxjdl                          1/1     Running   <span class=m>0</span>          22m
+kube-system   calico-node-jbfsl                          1/1     Running   <span class=m>0</span>          22m
+kube-system   calico-node-jqgrm                          1/1     Running   <span class=m>0</span>          22m
+kube-system   coredns-66bff467f8-kbw55                   1/1     Running   <span class=m>0</span>          23m
+kube-system   coredns-66bff467f8-pcrdj                   1/1     Running   <span class=m>0</span>          23m
+kube-system   kube-apiserver-master1                     1/1     Running   <span class=m>0</span>          23m
+kube-system   kube-apiserver-master2                     1/1     Running   <span class=m>0</span>          23m
+kube-system   kube-apiserver-master3                     1/1     Running   <span class=m>0</span>          22m
+kube-system   kube-controller-manager-master1            1/1     Running   <span class=m>0</span>          23m
+kube-system   kube-controller-manager-master2            1/1     Running   <span class=m>0</span>          23m
+kube-system   kube-controller-manager-master3            1/1     Running   <span class=m>0</span>          22m
+kube-system   kube-proxy-7nhnm                           1/1     Running   <span class=m>0</span>          23m
+kube-system   kube-proxy-fhxxk                           1/1     Running   <span class=m>0</span>          23m
+kube-system   kube-proxy-mq4pv                           1/1     Running   <span class=m>0</span>          23m
+kube-system   kube-scheduler-master1                     1/1     Running   <span class=m>0</span>          23m
+kube-system   kube-scheduler-master2                     1/1     Running   <span class=m>0</span>          23m
+kube-system   kube-scheduler-master3                     1/1     Running   <span class=m>0</span>          21m
+</code></pre></td></tr></table></div></div><p>然后</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-shell data-lang=shell>root@master2:~# kubectl taint nodes --all node-role.kubernetes.io/master-
+node/master1 untainted
+node/master2 untainted
+node/master3 untainted
+</code></pre></td></tr></table></div></div><p>在看看node状态 ,STATUS 都是ready了</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-shell data-lang=shell>root@master1:~# kubectl get nodes -o wide
+NAME      STATUS   ROLES    AGE   VERSION   INTERNAL-IP       EXTERNAL-IP   OS-IMAGE           KERNEL-VERSION     CONTAINER-RUNTIME
+master1   Ready    master   25m   v1.18.2   192.168.192.231   &lt;none&gt;        Ubuntu 20.04 LTS   5.4.0-26-generic   docker://19.3.8
+master2   Ready    master   26m   v1.18.2   192.168.238.255   &lt;none&gt;        Ubuntu 20.04 LTS   5.4.0-26-generic   docker://19.3.8
+master3   Ready    master   25m   v1.18.2   192.168.238.167   &lt;none&gt;        Ubuntu 20.04 LTS   5.4.0-26-generic   docker://19.3.8
+</code></pre></td></tr></table></div></div><p><strong>后面就是随意添加node了</strong>
+另外，生成加入命令的命令：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre class=chroma><code class=language-shell data-lang=shell>kubeadm token create --print-join-command
+</code></pre></td></tr></table></div></div></div><div class=post-copyright><p class=copyright-item><span class=item-title>Author</span>
+<span class=item-content>goodking-bq</span></p><p class=copyright-item><span class=item-title>LastMod</span>
+<span class=item-content>2020-05-15</span></p></div><footer class=post-footer><div class=post-tags><a href=/tags/kubernetes/>kubernetes</a>
+<a href=/tags/install/>install</a></div><nav class=post-nav><a class=prev href=/post/kubernetes/traefik/><i class="iconfont icon-left"></i><span class="prev-text nav-default">kubernets 里配置 Traefik</span>
+<span class="prev-text nav-mobile">Prev</span></a>
+<a class=next href=/post/kubernetes/configmap/><span class="next-text nav-default">kubernetes 的 configmap 使用</span>
+<span class="next-text nav-mobile">Next</span>
+<i class="iconfont icon-right"></i></a></nav></footer></article></div><div id=gitalk-container></div><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css crossorigin=anonymous><script src=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js crossorigin=anonymous></script><script type=text/javascript>var gitalk=new Gitalk({id:'2020-05-15 10:24:52 \u002b0800 \u002b0800',title:'kubernetes master集群搭建',clientID:'2a8b1932825256263b83',clientSecret:'911a142ea58b48f7e168576968d15a6e0130204d',repo:'goodking-bq.github.io',owner:'goodking-bq',admin:['goodking-bq'],body:decodeURI(location.href)});gitalk.render('gitalk-container');</script><noscript>Please enable JavaScript to view the <a href=https://github.com/gitalk/gitalk>comments powered by gitalk.</a></noscript></div></main><footer id=footer class=footer><div class=social-links><a href=mailto:goodking_bq@hotmail.com class="iconfont icon-email" title=email></a><a href=https://github.com/goodking-bq class="iconfont icon-github" title=github></a><a href=https://goodking-bq.github.io/index.xml type=application/rss+xml class="iconfont icon-rss" title=rss></a></div><div class=copyright><span class=power-by>Powered by <a class=hexo-link href=https://gohugo.io>Hugo</a></span>
+<span class=division>|</span>
+<span class=theme-info>Theme -
+<a class=theme-link href=https://github.com/olOwOlo/hugo-theme-even>Even</a></span><div class=busuanzi-footer><span id=busuanzi_container_site_pv>site pv: <span id=busuanzi_value_site_pv><img src=/img/spinner.svg alt=spinner.svg></span></span>
+<span class=division>|</span>
+<span id=busuanzi_container_site_uv>site uv: <span id=busuanzi_value_site_uv><img src=/img/spinner.svg alt=spinner.svg></span></span></div><span class=copyright-year>&copy;
+2017 -
+2020
+<span class=heart><i class="iconfont icon-heart"></i></span><span class=author>goodking-bq</span></span></div></footer><div class=back-to-top id=back-to-top><i class="iconfont icon-up"></i></div></div><script src=https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/npm/timeago.js@3.0.2/dist/timeago.min.js integrity="sha256-jwCP0NAdCBloaIWTWHmW4i3snUNMHUNO+jr9rYd2iOI=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/npm/timeago.js@3.0.2/dist/timeago.locales.min.js integrity="sha256-ZwofwC1Lf/faQCzN7nZtfijVV6hSwxjQMwXL4gn9qU8=" crossorigin=anonymous></script><script>var languageCode="zh-cn".replace(/-/g,'_').replace(/_(.*)/,function($0,$1){return $0.replace($1,$1.toUpperCase());});timeago().render(document.querySelectorAll('.timeago'),languageCode);timeago.cancel();</script><script>window.sequenceDiagramsOptions={theme:'hand'};</script><script src=https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.js integrity="sha256-4O4pS1SH31ZqrSO2A/2QJTVjTPqVe+jnYgOWUVr7EEc=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/npm/snapsvg@0.5.1/dist/snap.svg-min.js integrity="sha256-oI+elz+sIm+jpn8F/qEspKoKveTc5uKeFHNNVexe6d8=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/npm/underscore@1.8.3/underscore-min.js integrity="sha256-obZACiHd7gkOk9iIL/pimWMTJ4W/pBsKu+oZnSeBIek=" crossorigin=anonymous></script><script src=https://cdn.jsdelivr.net/gh/bramp/js-sequence-diagrams@2.0.1/dist/sequence-diagram-min.js integrity=sha384-8748Vn52gHJYJI0XEuPB2QlPVNUkJlJn9tHqKec6J3q2r9l8fvRxrgn/E5ZHV0sP crossorigin=anonymous></script><link rel=stylesheet href=https://cdn.jsdelivr.net/gh/bramp/js-sequence-diagrams@2.0.1/dist/sequence-diagram-min.css integrity=sha384-6QbLKJMz5dS3adWSeINZe74uSydBGFbnzaAYmp+tKyq60S7H2p6V7g1TysM5lAaF crossorigin=anonymous><script type=text/javascript src=/js/main.min.d7b7ada643c9c1a983026e177f141f7363b4640d619caf01d8831a6718cd44ea.js></script></body></html>
