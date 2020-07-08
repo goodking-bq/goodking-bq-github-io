@@ -3,7 +3,7 @@ on:
   push:
     branches: [master]
 env:
-  IMAGE_URL: registry.cn-hangzhou.aliyuncs.com/golden/
+  IMAGE_URL: registry.cn-hangzhou.aliyuncs.com/golden/goodking_bq-github-io
 jobs:
   setup-build-Push-deploy:
     name: Setup, Build, Push
