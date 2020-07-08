@@ -12,7 +12,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Build Docker image
-        run: docker build -t ${IMAGE_URL}:${GITHUB_SHA} .
+        run: |
+          echo "FROM nginx:alpine \nCOPY . /usr/share/nginx/html" > Dockfile
+          docker build -t ${IMAGE_URL}:${GITHUB_SHA} .
       - name: Docker Login
         run: docker login -u ${{ secrets.ALI_USERNAME }} -p ${{ secrets.ALI_PASSWORD }} registry.cn-hangzhou.aliyuncs.com
       - name: Docker Push
